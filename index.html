@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Simulador Óptico Ocular | Clínica Visual Avanzada</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #e9edf2 0%, #dce2e8 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.6);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0a2b3e;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        .header p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 0.85rem;
+        }
+
+        .main-dashboard {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .controls-panel {
+            width: 320px;
+            background: #ffffff;
+            border-right: 1px solid #cfdfed;
+            padding: 1.5rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.6rem;
+        }
+
+        .visual-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 1.2rem;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 1rem;
+            border: 1px solid #e2edf2;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #0f3b4c;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2c8faa;
+            padding-left: 12px;
+            font-size: 1.1rem;
+        }
+
+        canvas {
+            background: #fef9ef;
+            border-radius: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        #opticCanvas {
+            background: #fef9ef;
+        }
+        #simulatedImageCanvas {
+            background: #1e2a2e;
+            border-radius: 0.8rem;
+            width: 100%;
+            max-height: 280px;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .control-group {
+            margin-bottom: 0.8rem;
+        }
+        label {
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: #1a4b62;
+            display: block;
+            margin-bottom: 6px;
+        }
+        select, input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #cbdde6;
+            background: white;
+            font-weight: 500;
+        }
+        .diopter-value {
+            display: inline-block;
+            background: #1f5e77;
+            color: white;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .info-text {
+            background: #eef3f7;
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: #135e62;
+        }
+        button {
+            background: #1c6f8c;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.1s;
+            width: 100%;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        button:hover {
+            background: #0e4e64;
+        }
+        .badge {
+            background: #d9eef5;
+            border-radius: 24px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            color: #005f73;
+        }
+        .flex-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        footer {
+            background: #f0f4f8;
+            padding: 12px 20px;
+            font-size: 0.7rem;
+            text-align: center;
+            color: #3e6b7e;
+        }
+        .file-input-label {
+            background: #2c8faa;
+            padding: 8px;
+            border-radius: 40px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .file-input-label:hover {
+            background: #1c6f8c;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        @media (max-width: 800px) {
+            .controls-panel { width: 100%; border-right: none; border-bottom: 1px solid #cfdfed; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>🔬 Ocular Ray Trace · Simulador Refractivo Clínico</h1>
+        <p>Óptica geométrica · Lentes correctoras · Patologías visuales</p>
+    </div>
+    <div class="main-dashboard">
+        <div class="controls-panel">
+            <div class="card">
+                <div class="card-title">👁️ Tipo de ojo (base)</div>
+                <select id="eyeTypeSelect">
+                    <option value="emetrope">Ojo normal (Emétrope)</option>
+                    <option value="myopia">Miopía (foco anterretinal)</option>
+                    <option value="hyperopia">Hipermetropía (foco postretinal)</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔘 Lente correctora externa</div>
+                <div class="control-group">
+                    <label>Potencia lente (D): <span id="lensPowerValue">0.00</span> D</label>
+                    <input type="range" id="lensPowerSlider" min="-12" max="12" step="0.5" value="0">
+                </div>
+                <div class="flex-row">
+                    <span class="badge">Convexa (+) hipermetropía</span>
+                    <span class="badge">Cóncava (-) miopía</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🩺 Patologías (filtros visuales)</div>
+                <select id="pathologySelect">
+                    <option value="none">Sin patología</option>
+                    <option value="cataract">Catarata (desenfoque + amarillo)</option>
+                    <option value="retinalDetachment">Desprendimiento de retina (cortina)</option>
+                    <option value="diplopia">Diplopía (imagen doble)</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 Inferencia refractiva (Modo inverso)</div>
+                <div class="control-group">
+                    <label>Paciente ve nítido con lente (D):</label>
+                    <input type="number" id="inverseLensInput" value="0" step="0.5">
+                    <button id="calcInverseBtn">Calcular defecto subyacente</button>
+                </div>
+                <div id="inverseResult" class="info-text">👉 Introduce una lente y pulsa calcular</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🎚️ Simulador de desenfoque adicional</div>
+                <label>Blur adicional (desenfoque): <span id="blurAmountVal">0</span> px</label>
+                <input type="range" id="extraBlurSlider" min="0" max="10" step="0.2" value="0">
+                <label for="imageUpload" class="file-input-label">📁 Cargar imagen externa</label>
+                <input type="file" id="imageUpload" accept="image/jpeg,image/png,image/jpg">
+                <button id="resetBtn">⟳ Resetear todo</button>
+            </div>
+            <div id="dynamicAdvice" class="info-text" style="background: #e6f4ea;">🧠 Análisis: <span id="refractiveDiagnosis">Ojo normal, foco sobre retina</span></div>
+            <div class="info-text">📏 Foco relativo: <span id="focusPositionLabel">0.00</span> mm (Retina = 0)</div>
+        </div>
+
+        <div class="visual-zone">
+            <div class="card">
+                <div class="card-title">✧ Esquema óptico superior · Rayos paralelos (∞)</div>
+                <canvas id="opticCanvas" width="700" height="320" style="width:100%; height:auto; max-width:700px;"></canvas>
+                <div class="flex-row" style="justify-content: space-between; margin-top: 8px;">
+                    <span>🔴 Córnea/Cristalino</span> <span>🟢 Retina</span> <span>🔵 Plano de enfoque</span> <span>⚪ Rayos luminosos</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🖼️ Simulación visual subjetiva (Carga tu imagen o usa patrón clínico)</div>
+                <div style="display: flex; justify-content: center;">
+                    <canvas id="simulatedImageCanvas" width="550" height="300" style="width:100%; max-width:550px; border-radius: 1rem;"></canvas>
+                </div>
+                <div class="flex-row" style="justify-content: center; margin-top: 10px;">
+                    <span class="badge">Desenfoque dinámico por error refractivo</span>
+                    <span class="badge">Filtros patológicos en tiempo real</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>Modelo lente delgada P=1/f. Simulación interactiva para formación clínica. La imagen simulada aplica desenfoque según miopía/hipermetropía + lente correctora.</footer>
+</div>
+
+<script>
+    (function(){
+        // ---------- CONFIGURACIÓN ÓPTICA ----------
+        const CORNEA_X = 200;
+        const RETINA_X = 520;
+        const MAX_MM_OFFSET = 80;
+        
+        let eyeType = "emetrope";
+        let lensDiopters = 0;
+        let pathologyType = "none";
+        let extraBlur = 0;
+        let currentFocusX = RETINA_X;
+        
+        // Variables para la imagen simulada
+        let originalImageData = null;      // ImageData original
+        let simCanvas = document.getElementById('simulatedImageCanvas');
+        let simCtx = simCanvas.getContext('2d');
+        let imageLoaded = false;
+        
+        // Imagen por defecto (patrón clínico: optotipo + cuadrícula)
+        function createDefaultClinicalPattern() {
+            simCanvas.width = 550;
+            simCanvas.height = 300;
+            simCtx.fillStyle = "#f5f5f0";
+            simCtx.fillRect(0, 0, simCanvas.width, simCanvas.height);
+            // Dibujar optotipo "E" y círculos
+            simCtx.fillStyle = "#1a3a4a";
+            simCtx.font = "bold 48px 'Times New Roman', serif";
+            simCtx.fillText("E", simCanvas.width/2 - 30, simCanvas.height/2 + 15);
+            simCtx.font = "24px sans-serif";
+            simCtx.fillStyle = "#2c5a6e";
+            simCtx.fillText("20/40", simCanvas.width/2 - 45, simCanvas.height/2 - 30);
+            simCtx.beginPath();
+            simCtx.arc(simCanvas.width - 60, 50, 25, 0, 2*Math.PI);
+            simCtx.fillStyle = "#ffaa66";
+            simCtx.fill();
+            simCtx.fillStyle = "#000";
+            simCtx.font = "20px sans-serif";
+            simCtx.fillText("+", simCanvas.width - 68, 56);
+            // cuadrícula de fijación
+            for(let i=0;i<4;i++){
+                simCtx.beginPath();
+                simCtx.moveTo(40 + i*80, simCanvas.height-40);
+                simCtx.lineTo(80 + i*80, simCanvas.height-40);
+                simCtx.lineWidth = 2;
+                simCtx.strokeStyle = "#8b6b4d";
+                simCtx.stroke();
+            }
+            originalImageData = simCtx.getImageData(0, 0, simCanvas.width, simCanvas.height);
+            imageLoaded = true;
+        }
+        
+        // Función para cargar imagen externa
+        function loadExternalImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    simCanvas.width = Math.min(img.width, 550);
+                    simCanvas.height = Math.min(img.height, 300);
+                    simCtx.drawImage(img, 0, 0, simCanvas.width, simCanvas.height);
+                    originalImageData = simCtx.getImageData(0, 0, simCanvas.width, simCanvas.height);
+                    imageLoaded = true;
+                    applyAllVisualFilters(); // re-aplicar efectos
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // ---------- MODELO ÓPTICO ----------
+        function computeFocusOffset(eye, lensD) {
+            let baseErrorD = 0;
+            if(eye === "myopia") baseErrorD = -3.5;
+            if(eye === "hyperopia") baseErrorD = 3.5;
+            let totalDiopters = lensD + baseErrorD;
+            let offsetPx = totalDiopters * 2.5;
+            return Math.min(MAX_MM_OFFSET, Math.max(-MAX_MM_OFFSET, offsetPx));
+        }
+        
+        // ---------- FILTROS VISUALES REALISTAS ----------
+        // Desenfoque tipo box blur eficiente
+        function applyBlur(imageData, radius) {
+            if(radius < 0.5) return imageData;
+            let r = Math.min(12, Math.floor(radius));
+            let data = imageData.data;
+            let w = imageData.width;
+            let h = imageData.height;
+            let output = new Uint8ClampedArray(data.length);
+            for(let y=0; y<h; y++) {
+                for(let x=0; x<w; x++) {
+                    let idx = (y*w + x)*4;
+                    let rSum=0,gSum=0,bSum=0,count=0;
+                    for(let dy=-r; dy<=r; dy++) {
+                        for(let dx=-r; dx<=r; dx++) {
+                            let nx = x+dx, ny = y+dy;
+                            if(nx>=0 && nx<w && ny>=0 && ny<h) {
+                                let nIdx = (ny*w + nx)*4;
+                                rSum += data[nIdx];
+                                gSum += data[nIdx+1];
+                                bSum += data[nIdx+2];
+                                count++;
+                            }
+                        }
+                    }
+                    if(count>0) {
+                        output[idx] = rSum/count;
+                        output[idx+1] = gSum/count;
+                        output[idx+2] = bSum/count;
+                        output[idx+3] = 255;
+                    } else {
+                        output[idx] = data[idx];
+                        output[idx+1] = data[idx+1];
+                        output[idx+2] = data[idx+2];
+                        output[idx+3] = 255;
+                    }
+                }
+            }
+            return new ImageData(output, w, h);
+        }
+        
+        // Catarata: amarilleo y pérdida contraste
+        function applyCataract(imageData) {
+            let data = imageData.data;
+            for(let i=0; i<data.length; i+=4) {
+                data[i] = Math.min(255, data[i] * 0.65 + 100);     // R
+                data[i+1] = Math.min(255, data[i+1] * 0.7 + 90);  // G
+                data[i+2] = Math.min(255, data[i+2] * 0.5 + 40);   // B
+            }
+            return imageData;
+        }
+        
+        // Desprendimiento de retina: cortina negra en zona superior o lateral
+        function applyRetinalDetachment(imageData) {
+            let data = imageData.data;
+            let w = imageData.width;
+            let h = imageData.height;
+            for(let y=0; y<h; y++) {
+                if(y < h*0.55 && y > h*0.15) {
+                    for(let x=0; x<w*0.4; x++) {
+                        let idx = (y*w + x)*4;
+                        data[idx] = 0;
+                        data[idx+1] = 0;
+                        data[idx+2] = 0;
+                    }
+                }
+            }
+            return imageData;
+        }
+        
+        // Diplopía: imagen doble desplazada
+        function applyDiplopia(imageData, offsetX = 12) {
+            let w = imageData.width;
+            let h = imageData.height;
+            let originalCopy = new ImageData(new Uint8ClampedArray(imageData.data), w, h);
+            let data = imageData.data;
+            for(let y=0; y<h; y++) {
+                for(let x=offsetX; x<w; x++) {
+                    let idxNew = (y*w + x)*4;
+                    let idxOrig = (y*w + (x-offsetX))*4;
+                    data[idxNew] = (data[idxNew] + originalCopy.data[idxOrig]) / 2;
+                    data[idxNew+1] = (data[idxNew+1] + originalCopy.data[idxOrig+1]) / 2;
+                    data[idxNew+2] = (data[idxNew+2] + originalCopy.data[idxOrig+2]) / 2;
+                }
+            }
+            return imageData;
+        }
+        
+        // Aplica todos los efectos en cadena: blur por error refractivo + blur extra + patología
+        function applyAllVisualFilters() {
+            if(!imageLoaded || !originalImageData) {
+                createDefaultClinicalPattern();
+            }
+            let offset = computeFocusOffset(eyeType, lensDiopters);
+            // Error refractivo genera desenfoque: proporcional al valor absoluto del offset
+            let refractiveBlur = Math.min(9, Math.abs(offset) / 2.2);
+            let totalBlur = refractiveBlur + extraBlur;
+            
+            // Clonar imagen original
+            let processed = new ImageData(
+                new Uint8ClampedArray(originalImageData.data),
+                originalImageData.width,
+                originalImageData.height
+            );
+            
+            // 1. Aplicar desenfoque si es necesario
+            if(totalBlur > 0.3) {
+                processed = applyBlur(processed, totalBlur);
+            }
+            
+            // 2. Aplicar patologías (efectos visuales)
+            if(pathologyType === "cataract") {
+                processed = applyCataract(processed);
+            }
+            else if(pathologyType === "retinalDetachment") {
+                processed = applyRetinalDetachment(processed);
+            }
+            else if(pathologyType === "diplopia") {
+                processed = applyDiplopia(processed, 10);
+            }
+            
+            simCtx.putImageData(processed, 0, 0);
+        }
+        
+        // ---------- DIBUJO DEL DIAGRAMA ÓPTICO ----------
+        const canvasOptic = document.getElementById('opticCanvas');
+        const ctx = canvasOptic.getContext('2d');
+        
+        function drawOpticDiagram(offsetPx) {
+            canvasOptic.width = 700;
+            canvasOptic.height = 320;
+            ctx.clearRect(0, 0, canvasOptic.width, canvasOptic.height);
+            // Córnea / cristalino
+            ctx.beginPath();
+            ctx.arc(CORNEA_X, canvasOptic.height/2, 28, 0, 2*Math.PI);
+            ctx.fillStyle = "#f5e6d3";
+            ctx.fill();
+            ctx.strokeStyle = "#bc9a6c";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = "#5d3a1a";
+            ctx.font = "bold 11px 'Segoe UI'";
+            ctx.fillText("Córnea/Lente", CORNEA_X-35, canvasOptic.height/2-18);
+            
+            // Retina
+            ctx.beginPath();
+            ctx.moveTo(RETINA_X, 40);
+            ctx.lineTo(RETINA_X, canvasOptic.height-40);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#2b7a4b";
+            ctx.stroke();
+            ctx.fillStyle = "#2b7a4b";
+            ctx.fillText("Retina", RETINA_X-25, 65);
+            
+            // Plano de enfoque
+            let focusX = Math.min(canvasOptic.width-20, Math.max(20, RETINA_X + offsetPx));
+            ctx.beginPath();
+            ctx.moveTo(focusX, 35);
+            ctx.lineTo(focusX, canvasOptic.height-35);
+            ctx.strokeStyle = "#2c7faa";
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([8,6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#1f6582";
+            ctx.fillText("Plano enfoque", focusX+5, 50);
+            
+            // Rayos paralelos
+            const rayStartX = 20;
+            for(let i = -1; i <= 1; i++) {
+                let yBase = canvasOptic.height/2 + i*42;
+                ctx.beginPath();
+                ctx.moveTo(rayStartX, yBase);
+                // refracción simple hacia el foco
+                let targetX = focusX;
+                let targetY = yBase + (targetX - rayStartX)*( (canvasOptic.height/2 - yBase)/(targetX - rayStartX) );
+                ctx.lineTo(targetX, targetY);
+                ctx.lineWidth = 1.8;
+                ctx.strokeStyle = "#f0a34b";
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(targetX, targetY);
+                ctx.lineTo(RETINA_X+15, targetY + (RETINA_X - targetX)*0.1);
+                ctx.strokeStyle = "#dd8844";
+                ctx.setLineDash([5,5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            // Rayo central
+            ctx.beginPath();
+            ctx.moveTo(rayStartX, canvasOptic.height/2);
+            ctx.lineTo(RETINA_X+20, canvasOptic.height/2);
+            ctx.strokeStyle = "#f5b042";
+            ctx.stroke();
+        }
+        
+        function updateRefractiveDiagnosis(offset) {
+            let relativeMM = offset / 2.5;
+            focusPositionLabel.innerText = relativeMM.toFixed(2) + " mm";
+            if(Math.abs(offset) < 5) refractiveDiagnosisSpan.innerText = "Emetropía / visión corregida · Foco sobre retina";
+            else if(offset < -5) refractiveDiagnosisSpan.innerText = "Miopía residual: foco delante de retina → lente negativa requerida";
+            else if(offset > 5) refractiveDiagnosisSpan.innerText = "Hipermetropía residual: foco detrás retina → lente positiva requerida";
+        }
+        
+        function updateAll() {
+            let offset = computeFocusOffset(eyeType, lensDiopters);
+            currentFocusX = RETINA_X + offset;
+            drawOpticDiagram(offset);
+            updateRefractiveDiagnosis(offset);
+            applyAllVisualFilters();
+        }
+        
+        // ---------- EVENTOS ----------
+        document.getElementById('eyeTypeSelect').addEventListener('change', (e) => {
+            eyeType = e.target.value;
+            updateAll();
+        });
+        document.getElementById('lensPowerSlider').addEventListener('input', (e) => {
+            lensDiopters = parseFloat(e.target.value);
+            document.getElementById('lensPowerValue').innerText = lensDiopters.toFixed(2);
+            updateAll();
+        });
+        document.getElementById('pathologySelect').addEventListener('change', (e) => {
+            pathologyType = e.target.value;
+            applyAllVisualFilters();
+        });
+        document.getElementById('extraBlurSlider').addEventListener('input', (e) => {
+            extraBlur = parseFloat(e.target.value);
+            document.getElementById('blurAmountVal').innerText = extraBlur.toFixed(1);
+            applyAllVisualFilters();
+        });
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            eyeType = "emetrope";
+            lensDiopters = 0;
+            pathologyType = "none";
+            extraBlur = 0;
+            document.getElementById('eyeTypeSelect').value = "emetrope";
+            document.getElementById('lensPowerSlider').value = 0;
+            document.getElementById('lensPowerValue').innerText = "0.00";
+            document.getElementById('pathologySelect').value = "none";
+            document.getElementById('extraBlurSlider').value = 0;
+            document.getElementById('blurAmountVal').innerText = "0";
+            createDefaultClinicalPattern();
+            updateAll();
+        });
+        document.getElementById('calcInverseBtn').addEventListener('click', () => {
+            let lensGiven = parseFloat(document.getElementById('inverseLensInput').value);
+            let estimatedError = -lensGiven;
+            let tipo = estimatedError > 0 ? "Hipermetropía" : (estimatedError < 0 ? "Miopía" : "Emetropía");
+            document.getElementById('inverseResult').innerHTML = `🔍 Defecto subyacente: ${tipo} (${estimatedError.toFixed(1)} D). Sin lente, el foco se ubica ${estimatedError>0?"detrás":"delante"} de la retina.`;
+        });
+        
+        // Carga de imagen externa
+        document.getElementById('imageUpload').addEventListener('change', (e) => {
+            if(e.target.files && e.target.files[0]) {
+                loadExternalImage(e.target.files[0]);
+            }
+        });
+        
+        // Inicializar con patrón clínico
+        createDefaultClinicalPattern();
+        updateAll();
+    })();
+</script>
+</body>
+</html>
