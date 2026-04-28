@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OptoSim Pro — Simulador Óptico Ocular</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#0a0d12;--surface:#111520;--surface2:#181d2a;--surface3:#1e2535;
+  --border:#252d40;--border2:#2e3a52;--border3:#3a4a68;
+  --text:#c8d4e8;--text-dim:#5a6a88;--text-bright:#e8f0ff;--text-mid:#8a9ab8;
+  --accent:#3d8cff;--accent2:#00d4a8;--accent3:#a78bfa;
+  --warn:#ff6b4a;--warn2:#f59e0b;--green:#4ade80;--red:#f87171;
+  --font-ui:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;--font-serif:'Instrument Serif',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-ui);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:11px 22px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.logo{display:flex;align-items:baseline;gap:9px}
+.logo-title{font-family:var(--font-serif);font-size:20px;color:var(--text-bright)}
+.logo-sub{font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+.hbadge{font-family:var(--font-mono);font-size:9px;padding:3px 8px;border-radius:20px;border:1px solid var(--border2);color:var(--text-dim)}
+.hbadge.green{border-color:#4ade8044;color:#4ade80;background:rgba(74,222,128,.07)}
+.tabs{display:flex;gap:1px;padding:8px 16px 0;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{font-size:11px;font-weight:500;padding:7px 13px;border-radius:6px 6px 0 0;cursor:pointer;color:var(--text-dim);transition:all .2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text)}.tab.active{background:var(--bg);color:var(--text-bright);border:1px solid var(--border);border-bottom:1px solid var(--bg);margin-bottom:-1px}
+.app-body{display:flex;flex:1;overflow:hidden;height:0}
+.panel{display:none;flex:1;overflow:hidden}.panel.active{display:flex}
+.sidebar{width:248px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.sidebar::-webkit-scrollbar{width:3px}.sidebar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.cg{border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.cg-t{font-family:var(--font-mono);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:7px 11px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--border3);flex-shrink:0}
+.cb{padding:10px;display:flex;flex-direction:column;gap:7px}
+.cr{display:flex;flex-direction:column;gap:4px}
+.cl{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--text-dim)}
+.cv{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);white-space:nowrap}
+.cv.ok{color:var(--accent2)}.cv.err{color:var(--warn)}.cv.warn{color:var(--warn2)}
+input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:var(--border2);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--accent);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.4)}
+.bg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.btn{font-size:10.5px;font-weight:500;padding:6px 9px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text-mid);cursor:pointer;transition:all .15s;text-align:center;user-select:none}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.active{background:rgba(61,140,255,.13);border-color:var(--accent);color:var(--accent)}
+.btn.full{grid-column:1/-1}.btn.wb{border-color:var(--warn);color:var(--warn)}.btn.wb:hover{background:rgba(255,107,74,.1)}
+.btn.gb{border-color:var(--green);color:var(--green)}.btn.gb:hover{background:rgba(74,222,128,.08)}
+.tr2{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--text-dim)}
+.tgl{position:relative;width:30px;height:16px;flex-shrink:0}.tgl input{opacity:0;width:0;height:0}
+.ts{position:absolute;inset:0;background:var(--border2);border-radius:16px;cursor:pointer;transition:.2s}
+.ts::before{content:'';position:absolute;left:2px;bottom:2px;width:12px;height:12px;border-radius:50%;background:var(--text-dim);transition:.2s}
+.tgl input:checked+.ts{background:var(--accent)}.tgl input:checked+.ts::before{transform:translateX(14px);background:#fff}
+select{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:5px 7px;font-family:var(--font-ui);font-size:10.5px;color:var(--text);width:100%;cursor:pointer;outline:none}
+select:focus{border-color:var(--accent)}
+input[type=number]{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;padding:6px 10px;font-family:var(--font-mono);font-size:14px;color:var(--accent);outline:none;width:100%;transition:border-color .2s}
+input[type=number]:focus{border-color:var(--accent)}
+.tip{position:relative;display:inline-flex;align-items:center;gap:3px;cursor:help}
+.tip-i{width:13px;height:13px;border-radius:50%;border:1px solid var(--text-dim);font-size:8px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);flex-shrink:0}
+.tip-t{display:none;position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:9.5px;color:var(--text);width:170px;line-height:1.55;z-index:200;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.tip:hover .tip-t{display:block}
+.canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.canvas-wrap{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+.info-bar{border-top:1px solid var(--border);background:var(--surface);padding:8px 16px;display:flex;gap:14px;align-items:center;flex-shrink:0;flex-wrap:wrap;min-height:50px}
+.ii{display:flex;flex-direction:column;gap:1px}
+.il{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+.iv{font-family:var(--font-mono);font-size:12px;color:var(--accent)}
+.iv.ok{color:var(--accent2)}.iv.err{color:var(--warn)}.iv.warn{color:var(--warn2)}
+.idv{width:1px;height:26px;background:var(--border);flex-shrink:0}
+.dbox{margin-left:auto;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 12px;font-size:10.5px;color:var(--text);max-width:340px;line-height:1.55;flex-shrink:0}
+.dbox strong{font-family:var(--font-mono);color:var(--accent2);font-size:8.5px;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}
+.inv-layout{flex:1;display:flex;overflow:hidden}
+.inv-form{width:268px;min-width:248px;background:var(--surface);border-right:1px solid var(--border);padding:18px 15px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.inv-form::-webkit-scrollbar{width:3px}.inv-form::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.inv-form h3{font-family:var(--font-serif);font-size:17px;color:var(--text-bright);font-weight:400}
+.inv-form p{font-size:10.5px;color:var(--text-dim);line-height:1.6}
+.fl{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:6px 9px;line-height:1.7}
+.fl span{color:var(--accent2)}
+.fr{display:flex;flex-direction:column;gap:5px}
+.fm-l{font-size:10px;color:var(--text-dim);font-family:var(--font-mono);display:flex;justify-content:space-between;align-items:center}
+.ir{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px;display:flex;flex-direction:column;gap:6px}
+.rr{display:flex;justify-content:space-between;align-items:center;font-size:10.5px}
+.rk{color:var(--text-dim)}.rv{font-family:var(--font-mono);color:var(--accent)}
+.rdx{margin-top:4px;padding-top:8px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text);line-height:1.55}
+.sep{border:none;border-top:1px solid var(--border);margin:2px 0}
+.vis-layout{flex:1;display:flex;overflow:hidden}
+.vis-display{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000}
+.vis-half{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000}
+.vis-half-label{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:9px;color:rgba(255,255,255,.45);letter-spacing:1.5px;text-transform:uppercase;z-index:10;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:20px;white-space:nowrap}
+.vis-half canvas{max-width:100%;max-height:100%;object-fit:contain}
+.vdiv{width:1px;background:rgba(255,255,255,.15);flex-shrink:0}
+.pat-layout{flex:1;display:flex;overflow:hidden}
+.pat-display{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#050810}
+.pat-display canvas{max-width:100%;max-height:100%;object-fit:contain}
+.pat-lbl{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase;background:rgba(0,0,0,.6);padding:4px 14px;border-radius:20px;pointer-events:none;white-space:nowrap}
+.sw-row{display:flex;gap:6px;align-items:center;font-size:10px;color:var(--text-dim)}
+.sw{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:.7}50%{opacity:1}}
+.pulse{animation:pulse 2s infinite}
+@media(max-width:900px){.sidebar,.inv-form{width:200px;min-width:180px}.dbox{display:none}}
+
+/* ═══ EXTRAS CSS ═══ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:24px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-title{font-family:var(--font-serif);font-size:20px;color:var(--text-bright)}
+.modal-close{font-size:20px;color:var(--text-dim);cursor:pointer;line-height:1;padding:2px 6px}
+.modal-close:hover{color:var(--warn)}
+.report-section{border:1px solid var(--border);border-radius:7px;padding:12px;margin-bottom:12px}
+.report-section h4{font-family:var(--font-mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.report-item{font-size:10.5px}.report-item .rl{color:var(--text-dim)}.report-item .rv{font-family:var(--font-mono);color:var(--accent)}
+.chart-container{position:relative;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.chart-container canvas{display:block;width:100%!important}
+.tab-extra{background:var(--surface);border-top:1px solid var(--border);padding:6px 16px;display:flex;gap:8px;align-items:center;flex-shrink:0}
+.extra-btn{font-family:var(--font-mono);font-size:9.5px;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:all .15s}
+.extra-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.anim-indicator{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--text-dim)}
+.anim-dot{width:6px;height:6px;border-radius:50%;background:var(--border2)}
+.anim-dot.running{background:var(--accent2);animation:pulse 1s infinite}
+/* light mode */
+body.light{--bg:#f0f4fa;--surface:#ffffff;--surface2:#e8eef8;--surface3:#dde6f2;--border:#c8d4e8;--border2:#a8b8d0;--border3:#8898b8;--text:#1a2840;--text-dim:#5a6a88;--text-bright:#0a1830;--text-mid:#3a4a68}
+body.light .hbadge{background:rgba(0,0,0,.04)}
+body.light canvas{background:#f5f8ff}
+/* pupil slider area */
+.pupil-indicator{width:100%;height:32px;display:flex;align-items:center;justify-content:center;position:relative}
+.pupil-ring{border-radius:50%;border:2px solid #7dd3fc;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.pupil-core{border-radius:50%;background:#000;transition:all .3s}
+/* AV chart tooltip */
+.chart-tooltip{position:absolute;background:var(--surface3);border:1px solid var(--border2);border-radius:5px;padding:5px 8px;font-family:var(--font-mono);font-size:9.5px;color:var(--text);pointer-events:none;display:none;z-index:10}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <span class="logo-title">OptoSim <em>Pro</em></span>
+    <span class="logo-sub">Simulador Óptico Ocular · v3.1</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="hbadge">Óptica Geométrica</span>
+    <span class="hbadge green pulse">● Activo</span>
+  </div>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('sim')">① Simulador Óptico</div>
+  <div class="tab" onclick="switchTab('inv')">② Modo Inverso</div>
+  <div class="tab" onclick="switchTab('vis')">③ Visión Paciente</div>
+  <div class="tab" onclick="switchTab('pat')">④ Patologías</div>
+</div>
+
+<div class="tab-extra" id="toolbar-extra">
+  <button class="extra-btn" onclick="toggleAnim()" id="btn-anim">▶ Animar rayos</button>
+  <div class="anim-indicator"><span class="anim-dot" id="anim-dot"></span><span id="anim-status">Parado</span></div>
+  <div style="flex:1"></div>
+  <button class="extra-btn" onclick="showAVChart()">📈 Gráfica AV</button>
+  <button class="extra-btn" onclick="showReport()">📄 Informe</button>
+  <button class="extra-btn" onclick="toggleTheme()" id="btn-theme">☀ Modo claro</button>
+  <button class="extra-btn" onclick="showFieldMap()">👁 Campo visual</button>
+</div>
+
+<!-- AV CHART MODAL -->
+<div class="modal-overlay" id="modal-av">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <span class="modal-title">Curva AV vs Error Refractivo</span>
+      <span class="modal-close" onclick="closeModal('modal-av')">✕</span>
+    </div>
+    <p style="font-size:10.5px;color:var(--text-dim);margin-bottom:12px">Relación entre el error refractivo no corregido y la agudeza visual estimada (escala logMAR). El punto azul indica el estado actual del simulador.</p>
+    <div class="chart-container" style="height:320px">
+      <canvas id="canvas-av-chart"></canvas>
+      <div class="chart-tooltip" id="av-tooltip"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+      <div style="font-size:10px;color:var(--text-dim)"><span style="color:var(--accent2)">■</span> Visión normal (&lt;0.25 D)</div>
+      <div style="font-size:10px;color:var(--text-dim)"><span style="color:var(--warn2)">■</span> Visión reducida</div>
+      <div style="font-size:10px;color:var(--text-dim)"><span style="color:var(--warn)">■</span> Visión muy reducida (&gt;3 D)</div>
+    </div>
+    <div style="margin-top:12px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim)">
+      Estado actual → Error: <span id="av-cur-err" style="color:var(--accent)">0.00 D</span> · AV: <span id="av-cur-frac" style="color:var(--accent2)">20/20</span> · logMAR: <span id="av-cur-log" style="color:var(--accent)">0.00</span>
+    </div>
+  </div>
+</div>
+
+<!-- INFORME MODAL -->
+<div class="modal-overlay" id="modal-report">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Informe Clínico</span>
+      <span class="modal-close" onclick="closeModal('modal-report')">✕</span>
+    </div>
+    <div id="report-content"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn gb" style="flex:1;padding:8px" onclick="downloadReport()">⬇ Descargar .txt</button>
+      <button class="btn" style="flex:1;padding:8px" onclick="copyReport()">📋 Copiar al portapapeles</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAMPO VISUAL MODAL -->
+<div class="modal-overlay" id="modal-field">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <span class="modal-title">Mapa de Campo Visual</span>
+      <span class="modal-close" onclick="closeModal('modal-field')">✕</span>
+    </div>
+    <p style="font-size:10.5px;color:var(--text-dim);margin-bottom:12px">Representación esquemática del campo visual según la patología activa en el Panel 4. Basado en defectos típicos por cuadrantes.</p>
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono)">OJO DERECHO (OD)</div>
+        <canvas id="canvas-field-od" width="240" height="240" style="border-radius:7px"></canvas>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono)">OJO IZQUIERDO (OI)</div>
+        <canvas id="canvas-field-oi" width="240" height="240" style="border-radius:7px"></canvas>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-mono)">LEYENDA</div>
+        <div id="field-legend" style="font-size:10px;line-height:2;color:var(--text-dim)"></div>
+        <div id="field-info" style="margin-top:10px;font-size:10px;color:var(--text);line-height:1.6;border-top:1px solid var(--border);padding-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-body">
+
+<!-- PANEL 1 -->
+<div class="panel active" id="panel-sim">
+  <div class="sidebar">
+    <div class="cg"><div class="cg-t"><span class="dot"></span>Tipo de Ojo</div><div class="cb">
+      <div class="bg">
+        <div class="btn active" id="btn-normal" onclick="setEyeType('normal')">Emétrope</div>
+        <div class="btn" id="btn-myopia" onclick="setEyeType('myopia')">Miopía</div>
+        <div class="btn full" id="btn-hyper" onclick="setEyeType('hyperopia')">Hipermetropía</div>
+      </div>
+      <div class="cr"><div class="cl">
+        <div class="tip">Error refractivo<span class="tip-i">?</span><span class="tip-t">Negativo=miopía (foco delante de retina). Positivo=hipermetropía (foco detrás). 0=emetropía perfecta.</span></div>
+        <span class="cv" id="val-refract">0.00 D</span></div>
+        <input type="range" id="sl-refract" min="-12" max="12" step="0.25" value="0" oninput="onRefractChange()">
+      </div>
+    </div></div>
+    <div class="cg"><div class="cg-t"><span class="dot"></span>Lente Correctora</div><div class="cb">
+      <div class="tr2"><div class="tip">Activar lente<span class="tip-i">?</span><span class="tip-t">Lente delgada frente al ojo. (+) convergente para hipermetropía. (−) divergente para miopía.</span></div>
+        <label class="tgl"><input type="checkbox" id="ck-lens" onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="cr"><div class="cl"><span>Potencia (D)</span><span class="cv" id="val-lens">0.00 D</span></div>
+        <input type="range" id="sl-lens" min="-12" max="12" step="0.25" value="0" oninput="onLensChange()"></div>
+      <div class="cr"><div class="cl">
+        <div class="tip">Dist. vértice (mm)<span class="tip-i">?</span><span class="tip-t">Distancia lente-córnea. Afecta potencia efectiva: P_eff = P/(1−d·P). Gafas ~12 mm, lentes de contacto ~0 mm.</span></div>
+        <span class="cv" id="val-vertex">12</span></div>
+        <input type="range" id="sl-vertex" min="0" max="20" step="1" value="12" oninput="onVertexChange()"></div>
+      <button class="btn full gb" onclick="autoCorrect()">⚡ Autocorrección óptima</button>
+    </div></div>
+    <div class="cg"><div class="cg-t"><span class="dot"></span>Acomodación</div><div class="cb">
+      <div class="tr2"><div class="tip">Acomodación<span class="tip-i">?</span><span class="tip-t">Cristalino aumenta curvatura para objetos cercanos. Amplitud max ~14D en niños, ~0D en presbicia.</span></div>
+        <label class="tgl"><input type="checkbox" id="ck-accom" onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="cr"><div class="cl"><span>Amplitud (D)</span><span class="cv" id="val-accom">4.0</span></div>
+        <input type="range" id="sl-accom" min="0" max="14" step="0.5" value="4" oninput="onAccomChange()"></div>
+      <div class="cr"><div class="cl"><span>Dist. objeto (m)</span><span class="cv" id="val-obj">&#x221E;</span></div>
+        <input type="range" id="sl-obj" min="0.1" max="6" step="0.1" value="6" oninput="onObjChange()"></div>
+    </div></div>
+    <div class="cg"><div class="cg-t"><span class="dot"></span>Visualización</div><div class="cb">
+      <div class="tr2"><span>Rayos de luz</span><label class="tgl"><input type="checkbox" id="ck-rays" checked onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="tr2"><span>Plano focal</span><label class="tgl"><input type="checkbox" id="ck-focal" checked onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="tr2"><span>Etiquetas</span><label class="tgl"><input type="checkbox" id="ck-labels" checked onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="tr2"><span>Círculo de confusión</span><label class="tgl"><input type="checkbox" id="ck-coc" onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="tr2"><span>Modo comparación</span><label class="tgl"><input type="checkbox" id="ck-compare" onchange="drawSim()"><span class="ts"></span></label></div>
+      <div class="cr"><div class="cl"><span>Nº rayos</span><span class="cv" id="val-rays">5</span></div>
+        <input type="range" id="sl-rays" min="3" max="11" step="2" value="5" oninput="onRaysChange()"></div>
+      <hr class="sep">
+      <button class="btn full wb" onclick="resetSim()">&#x21BA; Restablecer</button>
+    </div></div>
+    <div class="cg"><div class="cg-t"><span class="dot"></span>Leyenda</div><div class="cb" style="gap:5px">
+      <div class="sw-row"><span class="sw" style="background:#7dd3fc"></span>Córnea</div>
+      <div class="sw-row"><span class="sw" style="background:#a78bfa"></span>Cristalino</div>
+      <div class="sw-row"><span class="sw" style="background:#fbbf24"></span>Retina / Fóvea</div>
+      <div class="sw-row"><span class="sw" style="background:#4ade80"></span>Lente (+) convergente</div>
+      <div class="sw-row"><span class="sw" style="background:#f87171"></span>Lente (−) divergente</div>
+      <div class="sw-row"><span class="sw" style="background:#00d4a8"></span>Rayo enfocado</div>
+      <div class="sw-row"><span class="sw" style="background:#ff6b4a"></span>Rayo desenfocado</div>
+      <div class="sw-row"><span class="sw" style="background:#3d8cff"></span>Rayo corregido</div>
+    </div></div>
+  </div>
+  <div class="canvas-area">
+    <div class="canvas-wrap"><canvas id="canvas-sim"></canvas></div>
+    <div class="info-bar">
+      <div class="ii"><div class="il">Error Refractivo</div><div class="iv" id="ib-ref">0.00 D</div></div>
+      <div class="idv"></div>
+      <div class="ii"><div class="il">Lente Efectiva</div><div class="iv" id="ib-lens">—</div></div>
+      <div class="idv"></div>
+      <div class="ii"><div class="il">Error Residual</div><div class="iv ok" id="ib-res">0.00 D</div></div>
+      <div class="idv"></div>
+      <div class="ii"><div class="il">&#916; Foco/Retina</div><div class="iv ok" id="ib-foc">—</div></div>
+      <div class="idv"></div>
+      <div class="ii"><div class="il">Agudeza Visual</div><div class="iv ok" id="ib-acu">20/20</div></div>
+      <div class="idv"></div>
+      <div class="ii"><div class="il">Estado</div><div class="iv ok" id="ib-sta">Enfocado &#x2713;</div></div>
+      <div class="dbox" id="dbox"><strong>Diagnóstico clínico</strong>Ojo emétrope. El foco coincide exactamente con la fóvea. Visión nítida sin corrección.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 2 -->
+<div class="panel" id="panel-inv">
+  <div class="inv-layout">
+    <div class="inv-form">
+      <h3>Modo Inverso</h3>
+      <p>Introduce la corrección con la que el paciente ve nítidamente. El sistema calcula el defecto refractivo subyacente mediante vergencias.</p>
+      <div class="fl">
+        <span>V_imagen</span> = V_objeto + P_lente<br>
+        <span>Defecto</span> = −P_lente (visión lejana)<br>
+        <span>P. Remoto</span> = 1/|defecto| (m)
+      </div>
+      <div class="fr"><div class="fm-l"><span>OD — Esfera (D)</span><span style="color:var(--accent2);font-size:9px" id="iod-t">Emetropía</span></div>
+        <input type="number" id="inv-od" step="0.25" value="0" oninput="calcInverse()"></div>
+      <div class="fr"><div class="fm-l"><span>OD — Cilindro (D)</span><span style="color:var(--accent3);font-size:9px" id="iod-cy">Sin astig.</span></div>
+        <input type="number" id="inv-od-cyl" step="0.25" value="0" oninput="calcInverse()"></div>
+      <div class="fr"><div class="fm-l"><span>OI — Esfera (D)</span><span style="color:var(--accent2);font-size:9px" id="ioi-t">Emetropía</span></div>
+        <input type="number" id="inv-oi" step="0.25" value="0" oninput="calcInverse()"></div>
+      <div class="fr"><div class="fm-l"><span>OI — Cilindro (D)</span><span style="color:var(--accent3);font-size:9px" id="ioi-cy">Sin astig.</span></div>
+        <input type="number" id="inv-oi-cyl" step="0.25" value="0" oninput="calcInverse()"></div>
+      <div class="fr"><div class="fm-l"><span>Distancia prueba (m)</span></div>
+        <input type="number" id="inv-dist" step="0.5" value="6" oninput="calcInverse()"></div>
+      <div class="fr"><div class="fm-l"><span>Adición presbicia (D)</span></div>
+        <input type="number" id="inv-add" step="0.25" value="0" oninput="calcInverse()"></div>
+      <div class="ir">
+        <div class="rr"><span class="rk">Defecto OD</span><span class="rv" id="r-defod">Emetropía</span></div>
+        <div class="rr"><span class="rk">Astigmatismo OD</span><span class="rv" id="r-astod">—</span></div>
+        <div class="rr"><span class="rk">Punto Remoto OD</span><span class="rv" id="r-prod">&#x221E;</span></div>
+        <hr class="sep">
+        <div class="rr"><span class="rk">Defecto OI</span><span class="rv" id="r-defoi">Emetropía</span></div>
+        <div class="rr"><span class="rk">Astigmatismo OI</span><span class="rv" id="r-astoi">—</span></div>
+        <div class="rr"><span class="rk">Punto Remoto OI</span><span class="rv" id="r-proi">&#x221E;</span></div>
+        <hr class="sep">
+        <div class="rr"><span class="rk">Anisometropía</span><span class="rv" id="r-aniso">0.00 D</span></div>
+        <div class="rr"><span class="rk">Adición</span><span class="rv" id="r-add">—</span></div>
+        <div class="rr"><span class="rk">Vergencia entrada</span><span class="rv" id="r-vi">—</span></div>
+        <div class="rr"><span class="rk">Vergencia imagen</span><span class="rv" id="r-vm">—</span></div>
+        <div class="rdx" id="r-dx">Introduzca valores de corrección para calcular el defecto.</div>
+      </div>
+    </div>
+    <div class="canvas-area">
+      <div class="canvas-wrap"><canvas id="canvas-inv"></canvas></div>
+      <div class="info-bar">
+        <div class="ii"><div class="il">Verg. objeto OD</div><div class="iv" id="ib2-vi">—</div></div>
+        <div class="idv"></div>
+        <div class="ii"><div class="il">Verg. imagen OD</div><div class="iv" id="ib2-vm">—</div></div>
+        <div class="idv"></div>
+        <div class="ii"><div class="il">Pto. Remoto OD</div><div class="iv" id="ib2-od">&#x221E;</div></div>
+        <div class="idv"></div>
+        <div class="ii"><div class="il">Pto. Remoto OI</div><div class="iv" id="ib2-oi">&#x221E;</div></div>
+        <div class="idv"></div>
+        <div class="ii"><div class="il">Anisometropía</div><div class="iv ok" id="ib2-an">0.00 D</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 3 -->
+<div class="panel" id="panel-vis">
+  <div class="vis-layout">
+    <div class="sidebar">
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Condición Visual</div><div class="cb">
+        <div class="bg">
+          <div class="btn active" id="vb-emm" onclick="setVisC('emmetropia')">Emetropía</div>
+          <div class="btn" id="vb-myo" onclick="setVisC('myopia')">Miopía</div>
+          <div class="btn" id="vb-hyp" onclick="setVisC('hyperopia')">Hiper.</div>
+          <div class="btn" id="vb-pre" onclick="setVisC('presbyopia')">Presbicia</div>
+        </div>
+        <div class="cr"><div class="cl">
+          <div class="tip">Desenfoque<span class="tip-i">?</span><span class="tip-t">Radio del círculo de confusión en retina. Mayor valor = peor agudeza visual.</span></div>
+          <span class="cv" id="val-blur">0.0</span></div>
+          <input type="range" id="sl-blur" min="0" max="22" step="0.5" value="0" oninput="onBlurChange()"></div>
+        <div class="cr"><div class="cl"><span>Dist. objeto (m)</span><span class="cv" id="val-vd">6.0</span></div>
+          <input type="range" id="sl-vd" min="0.25" max="10" step="0.25" value="6" oninput="onVDistChange()"></div>
+        <button class="btn full" onclick="applyBlurPreset()">Aplicar preset condición</button>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Corrección</div><div class="cb">
+        <div class="tr2"><span>Lente correctora</span><label class="tgl"><input type="checkbox" id="ck-vl" onchange="renderVisual()"><span class="ts"></span></label></div>
+        <div class="cr"><div class="cl"><span>Potencia lente</span><span class="cv" id="val-vl">0.0 D</span></div>
+          <input type="range" id="sl-vl" min="-12" max="12" step="0.25" value="0" oninput="onVisLensChange()"></div>
+        <div class="rr" style="font-size:10.5px"><span class="rk">Residual</span><span class="rv" id="val-vres">—</span></div>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Imagen de Prueba</div><div class="cb">
+        <select id="sel-img" onchange="renderVisual()">
+          <option value="optotype">Optotipo (letras)</option>
+          <option value="snellen">Tabla de Snellen</option>
+          <option value="scene">Paisaje sintético</option>
+          <option value="amsler">Cuadrícula de Amsler</option>
+          <option value="text">Texto de periódico</option>
+          <option value="color">Test de colores</option>
+        </select>
+        <div class="tr2"><span>Comparación lado a lado</span><label class="tgl"><input type="checkbox" id="ck-vc" onchange="renderVisual()"><span class="ts"></span></label></div>
+        <div class="cr"><div class="cl"><span>Brillo</span><span class="cv" id="val-br">100%</span></div>
+          <input type="range" id="sl-br" min="20" max="160" step="5" value="100" oninput="onBrChange()"></div>
+        <div class="cr"><div class="cl"><span>Contraste</span><span class="cv" id="val-ct">100%</span></div>
+          <input type="range" id="sl-ct" min="20" max="200" step="5" value="100" oninput="onCtChange()"></div>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Agudeza Visual</div><div class="cb" style="gap:5px">
+        <div class="rr"><span class="rk" style="font-size:10px">Sin corrección</span><span class="rv" id="va-raw">20/20</span></div>
+        <div class="rr"><span class="rk" style="font-size:10px">Con corrección</span><span class="rv" id="va-cor">20/20</span></div>
+        <div class="rr"><span class="rk" style="font-size:10px">logMAR</span><span class="rv" id="va-log">0.00</span></div>
+      </div></div>
+    </div>
+    <div class="vis-display" id="vis-area"></div>
+  </div>
+</div>
+
+<!-- PANEL 4 -->
+<div class="panel" id="panel-pat">
+  <div class="pat-layout">
+    <div class="sidebar">
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Patología</div><div class="cb">
+        <div class="bg">
+          <div class="btn active full" id="pb-none" onclick="setPatho('none')">Sin patología</div>
+          <div class="btn" id="pb-cat" onclick="setPatho('cataract')">Catarata</div>
+          <div class="btn" id="pb-ret" onclick="setPatho('retinal')">Desp. Retina</div>
+          <div class="btn" id="pb-dip" onclick="setPatho('diplopia')">Diplopía</div>
+          <div class="btn" id="pb-mac" onclick="setPatho('macular')">Deg. Macular</div>
+          <div class="btn" id="pb-gla" onclick="setPatho('glaucoma')">Glaucoma</div>
+          <div class="btn" id="pb-ker" onclick="setPatho('keratoconus')">Queratocono</div>
+          <div class="btn" id="pb-dia" onclick="setPatho('diabetic')">Ret. Diabética</div>
+        </div>
+        <div id="pdesc" style="font-size:10px;color:var(--text-dim);line-height:1.55;padding-top:2px">Sin filtro patológico activo.</div>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Parámetros</div><div class="cb">
+        <div class="cr"><div class="cl"><span id="slbl-sev">Severidad</span><span class="cv" id="val-sev">50%</span></div>
+          <input type="range" id="sl-sev" min="0" max="100" step="1" value="50" oninput="onSevChange()"></div>
+        <div class="cr" id="p2-row"><div class="cl"><span id="slbl-p2">Parámetro 2</span><span class="cv" id="val-p2">50%</span></div>
+          <input type="range" id="sl-p2" min="0" max="100" step="1" value="50" oninput="onP2Change()"></div>
+        <div class="cr" id="p3-row" style="display:none"><div class="cl"><span id="slbl-p3">Parámetro 3</span><span class="cv" id="val-p3">50</span></div>
+          <input type="range" id="sl-p3" min="0" max="100" step="1" value="50" oninput="onP3Change()"></div>
+        <div class="cr" id="p4-row" style="display:none"><div class="cl"><span id="slbl-p4">Parámetro 4</span><span class="cv" id="val-p4">50%</span></div>
+          <input type="range" id="sl-p4" min="0" max="100" step="1" value="50" oninput="onP4Change()"></div>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Imagen Base</div><div class="cb">
+        <select id="sel-pimg" onchange="renderPatho()">
+          <option value="scene">Paisaje sintético</option>
+          <option value="optotype">Optotipo</option>
+          <option value="snellen">Tabla de Snellen</option>
+          <option value="amsler">Cuadrícula de Amsler</option>
+          <option value="text">Texto</option>
+        </select>
+        <div class="tr2"><span>Comparar con normal</span><label class="tgl"><input type="checkbox" id="ck-pc" onchange="renderPatho()"><span class="ts"></span></label></div>
+      </div></div>
+      <div class="cg"><div class="cg-t"><span class="dot"></span>Info Clínica</div>
+        <div class="cb"><div id="pclin" style="font-size:10px;color:var(--text-dim);line-height:1.6">Seleccione una patología para ver información clínica.</div></div>
+      </div>
+    </div>
+    <div class="pat-display" id="pat-area">
+      <canvas id="canvas-pat"></canvas>
+      <div class="pat-lbl" id="pat-lbl">SIN PATOLOGÍA</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app-body -->
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtD=v=>(v>=0?'+':'')+v.toFixed(2)+' D';
+
+function switchTab(t){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  $('panel-'+t).classList.add('active');
+  ['sim','inv','vis','pat'].forEach((id,i)=>{if(id===t)document.querySelectorAll('.tab')[i].classList.add('active');});
+  requestAnimationFrame(()=>{
+    if(t==='sim'){resizeSim();drawSim();}
+    if(t==='inv'){resizeInv();calcInverse();}
+    if(t==='vis'){renderVisual();}
+    if(t==='pat'){resizePat();renderPatho();}
+  });
+}
+
+/* ====================================================
+   PANEL 1 — SIMULADOR
+   ==================================================== */
+let eyeType='normal',refract=0,lensPow=0,vertexMm=12,accomAmp=4,objDist=6,nRays=5;
+
+function acuity(err){
+  const a=Math.abs(err);
+  if(a<0.25)return{f:'20/20',l:0};if(a<0.5)return{f:'20/25',l:.1};
+  if(a<0.75)return{f:'20/32',l:.2};if(a<1)return{f:'20/40',l:.3};
+  if(a<1.5)return{f:'20/50',l:.4};if(a<2)return{f:'20/63',l:.5};
+  if(a<3)return{f:'20/100',l:.7};if(a<5)return{f:'20/160',l:.9};
+  if(a<8)return{f:'20/400',l:1.3};return{f:'<20/400',l:1.6};
+}
+function vertCorr(P,dmm){const d=dmm/1000;const denom=1-d*P;return Math.abs(denom)<0.01?P:P/denom;}
+
+function setEyeType(t){
+  eyeType=t;
+  ['normal','myopia','hyper'].forEach(x=>$('btn-'+x).classList.remove('active'));
+  $('btn-'+(t==='hyperopia'?'hyper':t)).classList.add('active');
+  const pre={normal:0,myopia:-4,hyperopia:3};
+  refract=pre[t];$('sl-refract').value=refract;$('val-refract').textContent=fmtD(refract);drawSim();
+}
+function onRefractChange(){
+  refract=+$('sl-refract').value;$('val-refract').textContent=fmtD(refract);
+  ['normal','myopia','hyper'].forEach(x=>$('btn-'+x).classList.remove('active'));
+  if(refract<-0.12){eyeType='myopia';$('btn-myopia').classList.add('active');}
+  else if(refract>0.12){eyeType='hyperopia';$('btn-hyper').classList.add('active');}
+  else{eyeType='normal';$('btn-normal').classList.add('active');}
+  drawSim();
+}
+function onLensChange(){lensPow=+$('sl-lens').value;$('val-lens').textContent=fmtD(lensPow);drawSim();}
+function onVertexChange(){vertexMm=+$('sl-vertex').value;$('val-vertex').textContent=vertexMm;drawSim();}
+function onAccomChange(){accomAmp=+$('sl-accom').value;$('val-accom').textContent=accomAmp.toFixed(1);drawSim();}
+function onObjChange(){objDist=+$('sl-obj').value;$('val-obj').textContent=objDist>=6?'\u221e':objDist.toFixed(1)+' m';drawSim();}
+function onRaysChange(){nRays=+$('sl-rays').value;$('val-rays').textContent=nRays;drawSim();}
+function autoCorrect(){lensPow=-refract;$('sl-lens').value=clamp(lensPow,-12,12);$('val-lens').textContent=fmtD(lensPow);$('ck-lens').checked=true;drawSim();}
+function resetSim(){
+  refract=0;lensPow=0;vertexMm=12;accomAmp=4;objDist=6;nRays=5;eyeType='normal';
+  $('sl-refract').value=0;$('sl-lens').value=0;$('sl-vertex').value=12;
+  $('sl-accom').value=4;$('sl-obj').value=6;$('sl-rays').value=5;
+  $('val-refract').textContent='0.00 D';$('val-lens').textContent='0.00 D';
+  $('val-vertex').textContent='12';$('val-accom').textContent='4.0';
+  $('val-obj').textContent='\u221e';$('val-rays').textContent='5';
+  $('ck-lens').checked=false;$('ck-accom').checked=false;
+  $('ck-rays').checked=true;$('ck-focal').checked=true;$('ck-labels').checked=true;
+  $('ck-coc').checked=false;$('ck-compare').checked=false;
+  ['normal','myopia','hyper'].forEach(x=>$('btn-'+x).classList.remove('active'));
+  $('btn-normal').classList.add('active');drawSim();
+}
+
+function resizeSim(){
+  const cv=$('canvas-sim'),r=cv.parentElement.getBoundingClientRect();
+  cv.width=Math.round(r.width*devicePixelRatio);cv.height=Math.round(r.height*devicePixelRatio);
+  cv.style.width=r.width+'px';cv.style.height=r.height+'px';
+}
+
+function drawSim(){
+  const cv=$('canvas-sim');if(!cv.width||!cv.height)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,dpr=devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  if($('ck-compare').checked){
+    ctx.save();ctx.beginPath();ctx.rect(0,0,W/2,H);ctx.clip();
+    drawEye(ctx,0,0,W/2,H,false,dpr,'Sin corrección');ctx.restore();
+    ctx.save();ctx.beginPath();ctx.rect(W/2,0,W/2,H);ctx.clip();
+    drawEye(ctx,W/2,0,W/2,H,true,dpr,'Con corrección');ctx.restore();
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.setLineDash([4*dpr,4*dpr]);
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
+  }else{
+    drawEye(ctx,0,0,W,H/2,false,dpr,'Sin corrección');
+    drawEye(ctx,0,H/2,W,H/2,$('ck-lens').checked,dpr,$('ck-lens').checked?'Con corrección':'Sin lente');
+  }
+  updateInfoBar();
+}
+
+function drawEye(ctx,ox,oy,W,H,withLens,dpr,title){
+  ctx.save();ctx.translate(ox,oy);
+  const lensOn=withLens&&$('ck-lens').checked;
+  const showR=$('ck-rays').checked,showF=$('ck-focal').checked;
+  const showL=$('ck-labels').checked,showC=$('ck-coc').checked;
+  const accOn=$('ck-accom').checked;
+  const eL=W*.30,eR=W*.88,eW=eR-eL,cy=H/2,eH=Math.min(H*.54,110*dpr);
+  const cX=eL,lX=eL+eW*.33,rX=eR,extX=eL-44*dpr;
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.022)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=22*dpr){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=22*dpr){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Axis
+  ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.setLineDash([5*dpr,5*dpr]);
+  ctx.beginPath();ctx.moveTo(18*dpr,cy);ctx.lineTo(W-18*dpr,cy);ctx.stroke();ctx.setLineDash([]);
+
+  // Eye body
+  ctx.save();ctx.fillStyle='rgba(10,18,35,0.88)';ctx.strokeStyle='#1e3050';ctx.lineWidth=1.5*dpr;
+  ctx.beginPath();ctx.ellipse(eL+eW/2,cy,eW/2,eH/2,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+
+  // Scleral glow
+  const sg=ctx.createRadialGradient(eL+eW*.38,cy,eH*.08,eL+eW*.5,cy,eH*.62);
+  sg.addColorStop(0,'rgba(14,80,140,0.14)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(eL+eW/2,cy,eW/2,eH/2,0,0,Math.PI*2);ctx.fill();
+
+  // Cornea
+  ctx.save();ctx.strokeStyle='#7dd3fc';ctx.lineWidth=2.5*dpr;ctx.shadowColor='#7dd3fc';ctx.shadowBlur=9;
+  const cA=eH*.36;ctx.beginPath();ctx.arc(cX+cA*.38,cy,cA,-Math.PI*.44,Math.PI*.44);ctx.stroke();ctx.restore();
+
+  // Pupil
+  ctx.save();ctx.fillStyle='rgba(0,0,0,0.75)';ctx.strokeStyle='#1a3a6a';ctx.lineWidth=dpr;
+  ctx.beginPath();ctx.arc(cX+eW*.07,cy,eH*.09,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+
+  // Crystalline
+  const lH=eH*.28*(accOn?1+accomAmp*.018:1),lb=11*dpr;
+  ctx.save();ctx.strokeStyle='#a78bfa';ctx.lineWidth=2*dpr;ctx.shadowColor='#a78bfa';ctx.shadowBlur=6;
+  ctx.beginPath();ctx.moveTo(lX,cy-lH);ctx.bezierCurveTo(lX+lb,cy-lH/2,lX+lb,cy+lH/2,lX,cy+lH);
+  ctx.bezierCurveTo(lX-lb,cy+lH/2,lX-lb,cy-lH/2,lX,cy-lH);ctx.stroke();
+  ctx.fillStyle='rgba(167,139,250,0.06)';
+  ctx.beginPath();ctx.moveTo(lX,cy-lH);ctx.bezierCurveTo(lX+lb,cy-lH/2,lX+lb,cy+lH/2,lX,cy+lH);
+  ctx.bezierCurveTo(lX-lb,cy+lH/2,lX-lb,cy-lH/2,lX,cy-lH);ctx.fill();ctx.restore();
+
+  // Retina
+  ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=3*dpr;ctx.shadowColor='#fbbf24';ctx.shadowBlur=10;
+  const rA=eH*.34;ctx.beginPath();ctx.arc(rX-rA*.38,cy,rA,Math.PI*.55,-Math.PI*.55,true);ctx.stroke();ctx.restore();
+
+  // Fovea
+  ctx.save();ctx.fillStyle='#fbbf24';ctx.shadowColor='#fbbf24';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(rX-2*dpr,cy,4*dpr,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  // OPTICS
+  const accExtra=accOn?clamp(accomAmp,0,14):0;
+  const eff=lensOn?vertCorr(lensPow,vertexMm):0;
+  const combErr=refract+eff-accExtra*(objDist<6?1:0);
+  const scale=(rX-lX)*.1;
+  const focusPx=rX-combErr*scale;
+  const focErr=Math.abs(focusPx-rX);
+  const rayCol=focErr<7*dpr?'#00d4a8':lensOn?'#3d8cff':'#ff6b4a';
+
+  // External lens
+  if(lensOn){
+    const lc=lensPow>=0?'#4ade80':'#f87171';
+    ctx.save();ctx.strokeStyle=lc;ctx.lineWidth=2.5*dpr;ctx.shadowColor=lc;ctx.shadowBlur=12;
+    const lh2=eH*.5,bx=lensPow>=0?9*dpr:5*dpr;
+    const drawS=dx=>{ctx.beginPath();ctx.moveTo(extX,cy-lh2);
+      if(lensPow>=0)ctx.bezierCurveTo(extX+dx,cy-lh2/2,extX+dx,cy+lh2/2,extX,cy+lh2);
+      else ctx.bezierCurveTo(extX+dx,cy-lh2*.4,extX+dx,cy+lh2*.4,extX,cy+lh2);
+      ctx.stroke();};
+    drawS(bx);drawS(-bx);
+    ctx.fillStyle=lensPow>=0?'rgba(74,222,128,0.05)':'rgba(248,113,113,0.05)';
+    ctx.beginPath();ctx.moveTo(extX,cy-lh2);
+    if(lensPow>=0){ctx.bezierCurveTo(extX+bx,cy-lh2/2,extX+bx,cy+lh2/2,extX,cy+lh2);ctx.bezierCurveTo(extX-bx,cy+lh2/2,extX-bx,cy-lh2/2,extX,cy-lh2);}
+    else{ctx.bezierCurveTo(extX+bx,cy-lh2*.4,extX+bx,cy+lh2*.4,extX,cy+lh2);ctx.bezierCurveTo(extX-bx,cy+lh2*.4,extX-bx,cy-lh2*.4,extX,cy-lh2);}
+    ctx.fill();
+    if(showL){ctx.font=`bold ${8.5*dpr}px DM Mono,monospace`;ctx.fillStyle=lc;ctx.textAlign='center';ctx.fillText(fmtD(lensPow),extX,cy-lh2-8*dpr);}
+    ctx.restore();
+  }
+
+  // Rays
+  if(showR){
+    const offs=[];
+    for(let i=0;i<nRays;i++){const f=nRays===1?0:(i/(nRays-1)-.5)*2;offs.push(f*eH*.34);}
+    offs.forEach(off=>{
+      const sx=lensOn?extX-68*dpr:cX-58*dpr,sy=cy+off;
+      ctx.save();ctx.strokeStyle=rayCol;ctx.lineWidth=1.3*dpr;ctx.shadowColor=rayCol;ctx.shadowBlur=4;ctx.globalAlpha=.82;
+      ctx.beginPath();
+      if(lensOn){
+        ctx.moveTo(sx,sy);ctx.lineTo(extX,sy);
+        const dxe=focusPx-extX,sl2=dxe!==0?(cy-sy)/dxe:0;
+        const yc=sy+sl2*(cX-extX);ctx.lineTo(cX,yc);
+        const dxi=focusPx-cX,sli=dxi!==0?(cy-yc)/dxi:0;
+        if(focusPx<=rX){ctx.lineTo(focusPx,cy);ctx.lineTo(rX,cy-sli*(rX-focusPx));}
+        else ctx.lineTo(rX,yc+sli*(rX-cX));
+      }else{
+        ctx.moveTo(sx,sy);ctx.lineTo(lX,sy);
+        const dx=focusPx-lX,sl2=dx!==0?(cy-sy)/dx:0;
+        if(focusPx<=rX){ctx.lineTo(focusPx,cy);ctx.lineTo(rX,cy-sl2*(rX-focusPx));}
+        else ctx.lineTo(rX,sy+sl2*(rX-lX));
+      }
+      ctx.stroke();
+      // Arrow
+      ctx.fillStyle=rayCol;ctx.globalAlpha=.5;
+      ctx.beginPath();ctx.moveTo(sx+10*dpr,sy);ctx.lineTo(sx+5*dpr,sy-3*dpr);ctx.lineTo(sx+5*dpr,sy+3*dpr);ctx.closePath();ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  // Focal plane
+  if(showF){
+    const fc=focErr<7*dpr?'#00d4a8':rayCol;
+    if(focusPx>cX-20*dpr&&focusPx<rX+70*dpr){
+      ctx.save();ctx.strokeStyle=fc+'aa';ctx.lineWidth=1.5*dpr;ctx.shadowColor=fc;ctx.shadowBlur=6;ctx.setLineDash([3*dpr,3*dpr]);
+      ctx.beginPath();ctx.moveTo(focusPx,cy-eH*.62);ctx.lineTo(focusPx,cy+eH*.62);ctx.stroke();
+      ctx.setLineDash([]);ctx.shadowBlur=15;ctx.fillStyle=fc;
+      ctx.beginPath();ctx.arc(focusPx,cy,5*dpr,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+    ctx.save();ctx.strokeStyle='#fbbf2455';ctx.lineWidth=dpr;ctx.setLineDash([2*dpr,5*dpr]);
+    ctx.beginPath();ctx.moveTo(rX,cy-eH*.65);ctx.lineTo(rX,cy+eH*.65);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    if(focErr>6*dpr&&focusPx>cX-10*dpr&&focusPx<rX+80*dpr){
+      const ay=cy+eH*.5+10*dpr;
+      ctx.save();ctx.strokeStyle='#ffffff33';ctx.lineWidth=dpr;
+      ctx.beginPath();ctx.moveTo(Math.min(focusPx,rX),ay);ctx.lineTo(Math.max(focusPx,rX),ay);ctx.stroke();
+      ctx.font=`${8*dpr}px DM Mono,monospace`;ctx.fillStyle='#ffffff44';ctx.textAlign='center';
+      ctx.fillText('\u0394='+combErr.toFixed(2)+' D',(focusPx+rX)/2,ay-4*dpr);ctx.restore();
+    }
+  }
+
+  // CoC
+  if(showC&&focErr>4*dpr){
+    ctx.save();ctx.strokeStyle='#ff6b4a88';ctx.lineWidth=1.5*dpr;ctx.setLineDash([2*dpr,2*dpr]);
+    ctx.beginPath();ctx.arc(rX-2*dpr,cy,clamp(focErr*.24,1,eH*.3),0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  }
+
+  // Labels
+  if(showL){
+    ctx.save();ctx.textAlign='center';
+    [{x:cX,y:cy-eH*.55-8*dpr,t:'CÓRNEA',c:'#7dd3fc99'},{x:lX,y:cy+eH*.55+13*dpr,t:'CRISTALINO',c:'#a78bfa99'},
+     {x:rX,y:cy-eH*.55-8*dpr,t:'RETINA',c:'#fbbf2499'},{x:rX-2*dpr,y:cy+14*dpr,t:'FÓVEA',c:'#fbbf24bb',s:7*dpr}
+    ].forEach(l=>{ctx.font=`${l.s||8.5*dpr}px DM Mono,monospace`;ctx.fillStyle=l.c;ctx.fillText(l.t,l.x,l.y);});
+    ctx.font=`${9*dpr}px DM Mono,monospace`;ctx.fillStyle='rgba(255,255,255,0.28)';ctx.textAlign='left';
+    ctx.fillText(title,20*dpr,13*dpr);ctx.restore();
+  }
+  ctx.restore();
+}
+
+function updateInfoBar(){
+  const lOn=$('ck-lens').checked;
+  const eff=lOn?vertCorr(lensPow,vertexMm):0;
+  const res=refract+eff;
+  const aRaw=acuity(refract),aCor=acuity(res);
+  $('ib-ref').textContent=fmtD(refract);$('ib-ref').className='iv '+(Math.abs(refract)<.12?'ok':'err');
+  $('ib-lens').textContent=lOn?fmtD(eff)+(vertexMm!==12?'*':''):'—';
+  $('ib-res').textContent=fmtD(res);$('ib-res').className='iv '+(Math.abs(res)<.25?'ok':Math.abs(res)<1?'warn':'err');
+  $('ib-foc').textContent=res.toFixed(2)+' D';$('ib-foc').className='iv '+(Math.abs(res)<.25?'ok':'err');
+  $('ib-acu').textContent=aCor.f;$('ib-acu').className='iv '+(aCor.l<.1?'ok':aCor.l<.5?'warn':'err');
+  const ok=Math.abs(res)<.25;
+  $('ib-sta').textContent=ok?'Enfocado \u2713':res<0?'Miopía residual':'Hipermet. residual';
+  $('ib-sta').className='iv '+(ok?'ok':'err');
+  let dx='';
+  if(Math.abs(refract)<.12&&!lOn) dx='Ojo <strong>emétrope</strong>. Foco sobre fóvea. AV 20/20 sin corrección.';
+  else if(refract<-.12&&!lOn){const pr=(1/Math.abs(refract)).toFixed(2);dx=`<strong>Miopía</strong> ${Math.abs(refract).toFixed(2)} D. Foco <em>delante</em> de retina. Punto remoto: ${pr} m. AV: ${aRaw.f}.`;}
+  else if(refract>.12&&!lOn) dx=`<strong>Hipermetropía</strong> ${refract.toFixed(2)} D. Foco <em>detrás</em> de retina. Cristalino debe acomodar ${refract.toFixed(2)} D extra.`;
+  else if(lOn){
+    if(Math.abs(res)<.25) dx=`Lente ${fmtD(lensPow)} (efectiva ${fmtD(eff)}, vértice ${vertexMm}mm) <strong>corrige</strong> el defecto. AV: ${aCor.f}`;
+    else if(res<0) dx=`<strong>Hipocorrección:</strong> ${Math.abs(res).toFixed(2)} D miopía residual. AV: ${aCor.f}. Aumentar potencia negativa.`;
+    else dx=`<strong>Sobrecorrección:</strong> ${res.toFixed(2)} D exceso. AV: ${aCor.f}. Reducir potencia positiva.`;
+  }
+  $('dbox').innerHTML='<strong>Diagnóstico clínico</strong>'+dx;
+}
+
+/* ====================================================
+   PANEL 2 — MODO INVERSO
+   ==================================================== */
+function resizeInv(){
+  const cv=$('canvas-inv'),r=cv.parentElement.getBoundingClientRect();
+  cv.width=Math.round(r.width*devicePixelRatio);cv.height=Math.round(r.height*devicePixelRatio);
+  cv.style.width=r.width+'px';cv.style.height=r.height+'px';
+}
+function dlbl(d){if(Math.abs(d)<.12)return'Emetropía';return d<0?`Miopía ${Math.abs(d).toFixed(2)} D`:`Hipermetropía ${d.toFixed(2)} D`;}
+function albl(c){if(Math.abs(c)<.12)return'Sin astig.';return`Astig. ${c.toFixed(2)} D`;}
+
+function calcInverse(){
+  const pod=+$('inv-od').value||0,poi=+$('inv-oi').value||0;
+  const coD=+$('inv-od-cyl').value||0,coI=+$('inv-oi-cyl').value||0;
+  const dist=+$('inv-dist').value||6,add=+$('inv-add').value||0;
+  const vi=dist>=6?0:1/dist,vm=vi+pod;
+  const dod=-pod,doi=-poi,aniso=Math.abs(pod-poi);
+  const prOD=Math.abs(dod)>.05?(1/Math.abs(dod)).toFixed(2)+' m':'\u221e';
+  const prOI=Math.abs(doi)>.05?(1/Math.abs(doi)).toFixed(2)+' m':'\u221e';
+  $('iod-t').textContent=dlbl(dod);$('ioi-t').textContent=dlbl(doi);
+  $('iod-cy').textContent=albl(coD);$('ioi-cy').textContent=albl(coI);
+  $('r-defod').textContent=dlbl(dod);$('r-defoi').textContent=dlbl(doi);
+  $('r-astod').textContent=albl(coD);$('r-astoi').textContent=albl(coI);
+  $('r-prod').textContent=prOD;$('r-proi').textContent=prOI;
+  $('r-aniso').textContent=aniso.toFixed(2)+' D'+(aniso>2.5?' \u26a0':'');
+  $('r-add').textContent=add>0?fmtD(add)+' (presbicia)':'—';
+  $('r-vi').textContent=vi.toFixed(3)+' D';$('r-vm').textContent=vm.toFixed(3)+' D';
+  $('ib2-vi').textContent=vi.toFixed(3)+' D';$('ib2-vm').textContent=vm.toFixed(3)+' D';
+  $('ib2-od').textContent=prOD;$('ib2-oi').textContent=prOI;
+  $('ib2-an').textContent=aniso.toFixed(2)+' D';$('ib2-an').className='iv '+(aniso>2.5?'err':aniso>1?'warn':'ok');
+  let dx='';
+  if(Math.abs(pod)<.12&&Math.abs(poi)<.12) dx='Ambos ojos <strong>emétropes</strong>. Sin defecto refractivo.';
+  else{
+    if(Math.abs(pod)>=.12||Math.abs(coD)>=.12) dx+=`<strong>OD:</strong> ${dlbl(dod)}${Math.abs(coD)>=.12?' / '+albl(coD):''}${Math.abs(dod)>.05?' — PR: '+prOD:''}. `;
+    if(Math.abs(poi)>=.12||Math.abs(coI)>=.12) dx+=`<strong>OI:</strong> ${dlbl(doi)}${Math.abs(coI)>=.12?' / '+albl(coI):''}${Math.abs(doi)>.05?' — PR: '+prOI:''}. `;
+    if(aniso>2.5) dx+=`\u26a0 <strong>Anisometropía significativa</strong> (${aniso.toFixed(2)} D): riesgo ambliopía. `;
+    if(add>0) dx+=`Adición ${fmtD(add)} por presbicia.`;
+  }
+  $('r-dx').innerHTML=dx||'Valores dentro del rango normal.';
+  drawInverse(pod,poi,dod,doi,coD,coI);
+}
+
+function drawInverse(pod,poi,dod,doi,coD,coI){
+  const cv=$('canvas-inv');if(!cv.width)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,dpr=devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0a0d12');bg.addColorStop(1,'#0d1220');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  drawInvEye(ctx,W,H,H*.27,dod,pod,coD,'OD',dpr);
+  drawInvEye(ctx,W,H,H*.73,doi,poi,coI,'OI',dpr);
+}
+
+function drawInvEye(ctx,W,H,cy,defect,lp,cyl,label,dpr){
+  const eL=W*.32,eR=W*.84,eW=eR-eL,eH=Math.min(H*.2,95*dpr);
+  const lX=eL+eW*.33,rX=eR,cX=eL,extX=eL-40*dpr,scale=(rX-lX)*.1;
+  const fNL=rX-defect*scale;
+
+  ctx.strokeStyle='rgba(255,255,255,0.022)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=20*dpr){ctx.beginPath();ctx.moveTo(x,cy-eH*.8);ctx.lineTo(x,cy+eH*.8);ctx.stroke();}
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.09)';ctx.lineWidth=1;ctx.setLineDash([3*dpr,5*dpr]);
+  ctx.beginPath();ctx.moveTo(18*dpr,cy);ctx.lineTo(W-18*dpr,cy);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  ctx.save();ctx.fillStyle='rgba(10,18,35,0.85)';ctx.strokeStyle='#1e3050';ctx.lineWidth=1.5*dpr;
+  ctx.beginPath();ctx.ellipse(eL+eW/2,cy,eW/2,eH/2,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle='#7dd3fc88';ctx.lineWidth=2*dpr;
+  const ca=eH*.34;ctx.beginPath();ctx.arc(cX+ca*.38,cy,ca,-Math.PI*.44,Math.PI*.44);ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle='#fbbf2499';ctx.lineWidth=2.5*dpr;
+  const ra=eH*.32;ctx.beginPath();ctx.arc(rX-ra*.38,cy,ra,Math.PI*.55,-Math.PI*.55,true);ctx.stroke();ctx.restore();
+
+  if(Math.abs(lp)>.05){
+    const lc=lp>0?'#4ade8088':'#f8717188',bx=lp>0?7*dpr:4*dpr,lh=eH*.45;
+    ctx.save();ctx.strokeStyle=lc;ctx.lineWidth=2*dpr;ctx.shadowColor=lc;ctx.shadowBlur=6;
+    ctx.beginPath();ctx.moveTo(extX,cy-lh);
+    ctx.bezierCurveTo(extX+(lp>0?bx:-bx),cy,extX+(lp>0?bx:-bx),cy,extX,cy+lh);
+    ctx.moveTo(extX,cy-lh);
+    ctx.bezierCurveTo(extX-(lp>0?bx:-bx),cy,extX-(lp>0?bx:-bx),cy,extX,cy+lh);
+    ctx.stroke();ctx.restore();
+  }
+
+  [-eH*.24,0,eH*.24].forEach(off=>{
+    ctx.save();ctx.strokeStyle='#ff6b4a66';ctx.lineWidth=dpr;ctx.beginPath();ctx.moveTo(18*dpr,cy+off);ctx.lineTo(lX,cy+off);
+    const dx=fNL-lX,sl=dx!==0?(cy-(cy+off))/dx:0;
+    if(fNL<rX){ctx.lineTo(fNL,cy);ctx.lineTo(rX,cy-sl*(rX-fNL));}
+    else ctx.lineTo(rX,cy+off+sl*(rX-lX));
+    ctx.stroke();ctx.restore();
+  });
+
+  if(fNL>cX-20*dpr&&fNL<rX+80*dpr){
+    ctx.save();ctx.strokeStyle='#ff6b4a88';ctx.lineWidth=1.5*dpr;ctx.setLineDash([2*dpr,3*dpr]);
+    ctx.beginPath();ctx.moveTo(fNL,cy-eH*.55);ctx.lineTo(fNL,cy+eH*.55);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ff6b4a';ctx.shadowColor='#ff6b4a';ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(fNL,cy,4*dpr,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  if(Math.abs(cyl)>.12){
+    const fc2=rX-(defect+cyl)*scale;
+    if(fc2>cX-20*dpr&&fc2<rX+80*dpr){
+      ctx.save();ctx.strokeStyle='#a78bfa55';ctx.lineWidth=dpr;ctx.setLineDash([1*dpr,3*dpr]);
+      ctx.beginPath();ctx.moveTo(fc2,cy-eH*.4);ctx.lineTo(fc2,cy+eH*.4);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    }
+  }
+  ctx.save();ctx.font=`bold ${9*dpr}px DM Mono,monospace`;ctx.fillStyle='#ffffff88';
+  ctx.fillText(`${label} — ${dlbl(defect)}${Math.abs(cyl)>.12?' / '+albl(cyl):''}`,18*dpr,cy-eH*.65);
+  ctx.font=`${8.5*dpr}px DM Mono,monospace`;ctx.textAlign='center';
+  if(fNL>cX-20*dpr&&fNL<W-10*dpr){ctx.fillStyle='#ff6b4a88';ctx.fillText('FOCO S/CORRECCIÓN',fNL,cy+eH*.65+12*dpr);}
+  ctx.fillStyle='#fbbf2455';ctx.fillText('RETINA',rX,cy+eH*.65+12*dpr);ctx.restore();
+}
+
+/* ====================================================
+   PANEL 3 — VISIÓN PACIENTE
+   ==================================================== */
+let visC='emmetropia',blurAmt=0,vDist=6,vLens=0,vBr=100,vCt=100;
+function setVisC(c){visC=c;['emm','myo','hyp','pre'].forEach(x=>$('vb-'+x).classList.remove('active'));
+  ({emmetropia:'emm',myopia:'myo',hyperopia:'hyp',presbyopia:'pre'}[c]);
+  $('vb-'+{emmetropia:'emm',myopia:'myo',hyperopia:'hyp',presbyopia:'pre'}[c]).classList.add('active');applyBlurPreset();}
+function applyBlurPreset(){blurAmt={emmetropia:0,myopia:9,hyperopia:5,presbyopia:7}[visC];$('sl-blur').value=blurAmt;$('val-blur').textContent=blurAmt.toFixed(1);renderVisual();}
+function onBlurChange(){blurAmt=+$('sl-blur').value;$('val-blur').textContent=blurAmt.toFixed(1);renderVisual();}
+function onVDistChange(){vDist=+$('sl-vd').value;$('val-vd').textContent=vDist.toFixed(1);renderVisual();}
+function onVisLensChange(){vLens=+$('sl-vl').value;$('val-vl').textContent=fmtD(vLens);renderVisual();}
+function onBrChange(){vBr=+$('sl-br').value;$('val-br').textContent=vBr+'%';renderVisual();}
+function onCtChange(){vCt=+$('sl-ct').value;$('val-ct').textContent=vCt+'%';renderVisual();}
+
+function effBlur(){
+  let b=blurAmt;
+  if($('ck-vl').checked)b=Math.max(0,b-Math.abs(vLens)*1.1);
+  if(visC==='myopia')b*=clamp(vDist/3.5,.5,2.2);
+  else if(visC==='presbyopia')b*=clamp(1-vDist/5,0,1.5);
+  else if(visC==='hyperopia')b*=clamp(1-vDist/8,0,1.5);
+  return clamp(b,0,24);
+}
+
+function renderVisual(){
+  const area=$('vis-area');area.innerHTML='';area.style.display='flex';
+  const compare=$('ck-vc').checked,imgType=$('sel-img').value;
+  const r=area.getBoundingClientRect(),S=Math.min(r.width,r.height,560);
+  if(S<=0){setTimeout(renderVisual,100);return;}
+  const base=document.createElement('canvas');base.width=S;base.height=S;
+  drawTestImg(base.getContext('2d'),S,imgType);
+
+  function makeCV(blur){
+    const cv=document.createElement('canvas');cv.width=S;cv.height=S;
+    cv.style.maxWidth='100%';cv.style.maxHeight='100%';cv.style.objectFit='contain';
+    const ctx=cv.getContext('2d');
+    ctx.save();ctx.filter=`blur(${Math.max(0,blur)}px) brightness(${vBr}%) contrast(${vCt}%)`;ctx.drawImage(base,0,0);ctx.restore();
+    return cv;
+  }
+  if(compare){
+    area.style.flexDirection='row';
+    const h1=document.createElement('div');h1.className='vis-half';
+    const l1=document.createElement('div');l1.className='vis-half-label';l1.textContent='SIN CORRECCIÓN';
+    h1.appendChild(l1);h1.appendChild(makeCV(effBlur()));area.appendChild(h1);
+    const dv=document.createElement('div');dv.className='vdiv';area.appendChild(dv);
+    const was=$('ck-vl').checked;$('ck-vl').checked=true;
+    const h2=document.createElement('div');h2.className='vis-half';
+    const l2=document.createElement('div');l2.className='vis-half-label';l2.textContent='CON CORRECCIÓN';
+    h2.appendChild(l2);h2.appendChild(makeCV(effBlur()));$('ck-vl').checked=was;area.appendChild(h2);
+  }else{
+    area.style.flexDirection='column';area.appendChild(makeCV(effBlur()));
+  }
+  const eb=effBlur(),bToD=b=>b/1.1;
+  $('va-raw').textContent=acuity(bToD(blurAmt)).f;
+  $('va-cor').textContent=acuity(bToD(eb)).f;
+  $('va-log').textContent=acuity(bToD(eb)).l.toFixed(2);
+  $('val-vres').textContent=eb<.5?'\u2713 Corregido':'~'+bToD(eb).toFixed(1)+' D residual';
+}
+
+/* ====================================================
+   IMÁGENES DE PRUEBA
+   ==================================================== */
+function drawTestImg(ctx,S,type){
+  ctx.fillStyle='#0a1520';ctx.fillRect(0,0,S,S);
+  if(type==='optotype')drawOptotype(ctx,S);
+  else if(type==='snellen')drawSnellen(ctx,S);
+  else if(type==='scene')drawScene(ctx,S);
+  else if(type==='amsler')drawAmsler(ctx,S);
+  else if(type==='text')drawNewspaper(ctx,S);
+  else if(type==='color')drawColor(ctx,S);
+}
+
+function drawOptotype(ctx,S){
+  ctx.fillStyle='#060d1a';ctx.fillRect(0,0,S,S);
+  const rows=[['E',.22,.14],['FP',.13,.30],['TOZ',.09,.44],['LPED',.065,.55],
+    ['PECFD',.048,.65],['EDFCZP',.035,.74],['FELOPZD',.026,.82],['DEFPOTEC',.019,.89],['LEFODPCT',.015,.95]];
+  const lbls=['20/200','20/100','20/70','20/50','20/40','20/30','20/25','20/20','20/15'];
+  ctx.fillStyle='#e8f0ff';ctx.textAlign='center';
+  rows.forEach(([t,s,y],i)=>{ctx.font=`bold ${S*s}px DM Sans,sans-serif`;ctx.fillText(t,S/2,S*y);});
+  ctx.font=`${S*.013}px DM Mono,monospace`;ctx.fillStyle='#2a5a7a';ctx.textAlign='left';
+  rows.forEach(([,,y],i)=>ctx.fillText(lbls[i],S*.02,S*y));
+}
+
+function drawSnellen(ctx,S){
+  ctx.fillStyle='#fff';ctx.fillRect(S*.04,S*.04,S*.92,S*.92);
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.strokeRect(S*.04,S*.04,S*.92,S*.92);
+  const rows=[['E',.18,.17],['FP',.11,.31],['TOZ',.08,.43],['LPED',.058,.54],
+    ['PECFD',.043,.63],['EDFCZP',.032,.72],['FELOPZD',.024,.80],['DEFPOTEC',.018,.87]];
+  rows.forEach(([t,s,y],i)=>{ctx.fillStyle=`hsl(0,0%,${i*4}%)`;ctx.font=`bold ${S*s}px DM Sans,sans-serif`;ctx.textAlign='center';ctx.fillText(t,S/2,S*y);});
+  ctx.font=`${S*.016}px DM Mono,monospace`;ctx.fillStyle='#888';ctx.textAlign='center';ctx.fillText('TABLA DE SNELLEN',S/2,S*.96);
+}
+
+function drawScene(ctx,S){
+  const sky=ctx.createLinearGradient(0,0,0,S*.52);sky.addColorStop(0,'#0d2a4a');sky.addColorStop(1,'#1a5c8a');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,S,S*.52);
+  [[.15,.12,.11],[.5,.08,.09],[.76,.14,.08]].forEach(([cx,cy,r])=>{
+    ctx.fillStyle='rgba(255,255,255,0.16)';
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(S*(cx+i*r*.5),S*cy,S*r*(.6+i*.1),0,Math.PI*2);ctx.fill();}
+  });
+  ctx.save();ctx.fillStyle='#ffd700';ctx.shadowColor='#ffd700';ctx.shadowBlur=25;
+  ctx.beginPath();ctx.arc(S*.78,S*.14,S*.055,0,Math.PI*2);ctx.fill();ctx.restore();
+  [[0,'#1a3a5a'],[1,'#22486a'],[2,'#2a5678']].forEach(([lay,col])=>{
+    ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(0,S*.52);
+    [0,.18+lay*.03,.12,.34,.22,.22,.35,.38,.48,.20+lay*.02,.62,.40,.78,.25,.88,.36,1,.30,1,.52].reduce((acc,v,i)=>{
+      if(i%2===0)acc.x=v*S;else ctx.lineTo(acc.x,v*S);return acc;},{x:0});
+    ctx.closePath();ctx.fill();
+  });
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  [[.22,.22,.05],[.48,.20,.04],[.78,.25,.04]].forEach(([px,py,r])=>{
+    ctx.beginPath();ctx.moveTo(S*px,S*py);ctx.lineTo(S*(px-r),S*(py+r));ctx.lineTo(S*(px+r),S*(py+r));ctx.closePath();ctx.fill();
+  });
+  const gnd=ctx.createLinearGradient(0,S*.52,0,S);gnd.addColorStop(0,'#2d6030');gnd.addColorStop(1,'#1a3a20');
+  ctx.fillStyle=gnd;ctx.fillRect(0,S*.52,S,S*.48);
+  ctx.save();const lake=ctx.createLinearGradient(0,S*.62,0,S*.75);lake.addColorStop(0,'#1a5080');lake.addColorStop(1,'#0d3050');
+  ctx.fillStyle=lake;ctx.beginPath();ctx.ellipse(S*.5,S*.68,S*.28,S*.06,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(S*.28,S*(.66+i*.012));ctx.lineTo(S*.72,S*(.66+i*.012));ctx.stroke();}
+  ctx.restore();
+  [[.08,.75],[.18,.70],[.82,.72],[.90,.68],[.95,.74]].forEach(([tx,ty])=>{
+    ctx.fillStyle='#0d2a10';ctx.beginPath();ctx.moveTo(S*tx,S*ty);ctx.lineTo(S*(tx-.04),S*(ty+.12));ctx.lineTo(S*(tx+.04),S*(ty+.12));ctx.closePath();ctx.fill();
+    ctx.fillStyle='#265c28';ctx.beginPath();ctx.moveTo(S*tx,S*(ty-.07));ctx.lineTo(S*(tx-.022),S*(ty+.03));ctx.lineTo(S*(tx+.022),S*(ty+.03));ctx.closePath();ctx.fill();
+  });
+  ctx.fillStyle='#303030';
+  ctx.beginPath();ctx.moveTo(S*.40,S);ctx.lineTo(S*.44,S*.60);ctx.lineTo(S*.56,S*.60);ctx.lineTo(S*.60,S);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#ffffff55';ctx.lineWidth=2;ctx.setLineDash([S*.025,S*.02]);
+  ctx.beginPath();ctx.moveTo(S*.5,S);ctx.lineTo(S*.5,S*.60);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#8B4513';ctx.fillRect(S*.38,S*.56,S*.08,S*.06);
+  ctx.fillStyle='#A0522D';ctx.beginPath();ctx.moveTo(S*.36,S*.56);ctx.lineTo(S*.42,S*.50);ctx.lineTo(S*.48,S*.56);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#4a2800';ctx.fillRect(S*.405,S*.575,S*.014,S*.045);
+}
+
+function drawAmsler(ctx,S){
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,S,S);
+  ctx.strokeStyle='#000';ctx.lineWidth=.7;
+  const step=S/20;
+  for(let i=0;i<=20;i++){ctx.beginPath();ctx.moveTo(i*step,0);ctx.lineTo(i*step,S);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*step);ctx.lineTo(S,i*step);ctx.stroke();}
+  ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(S/2,0);ctx.lineTo(S/2,S);ctx.stroke();ctx.beginPath();ctx.moveTo(0,S/2);ctx.lineTo(S,S/2);ctx.stroke();
+  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(S/2,S/2,4,0,Math.PI*2);ctx.fill();
+  ctx.font=`bold ${S*.028}px DM Sans`;ctx.fillStyle='#333';ctx.textAlign='center';ctx.fillText('Cuadrícula de Amsler',S/2,S*.97);
+  ctx.font=`${S*.018}px DM Mono`;ctx.fillStyle='#888';ctx.fillText('Fije la mirada en el punto central',S/2,S*.025);
+}
+
+function drawNewspaper(ctx,S){
+  ctx.fillStyle='#f5f0e8';ctx.fillRect(0,0,S,S);
+  ctx.fillStyle='#1a1a1a';ctx.font=`bold ${S*.065}px DM Sans`;ctx.textAlign='left';ctx.fillText('DIARIO MÉDICO',S*.05,S*.10);
+  ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(S*.05,S*.12);ctx.lineTo(S*.95,S*.12);ctx.stroke();
+  ctx.font=`${S*.032}px DM Sans`;ctx.fillStyle='#222';ctx.fillText('Avances en Oftalmología y Optometría',S*.05,S*.17);
+  const col1=['La corrección óptica mediante','lentes convergentes permite','compensar la hipermetropía.','El cristalino ajusta su focal','mediante acomodación activa.','La miopía se corrige con','lentes divergentes de potencia','igual y opuesta al defecto.','Los optotipos de Snellen','permiten cuantificar la','agudeza visual en fracción.'];
+  const col2=['El astigmatismo es causado','por curvatura irregular de','la córnea o el cristalino.','Las lentes cilíndricas son','el tratamiento de elección.','La presbicia afecta a la','capacidad de acomodación','con el avance de la edad.','La adición progresiva en','gafas bifocales compensa','la pérdida de amplitud.'];
+  ctx.font=`${S*.022}px DM Sans`;ctx.fillStyle='#333';
+  col1.forEach((l,i)=>ctx.fillText(l,S*.05,S*(.24+i*.032)));
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(S*.52,S*.20);ctx.lineTo(S*.52,S*.90);ctx.stroke();
+  col2.forEach((l,i)=>ctx.fillText(l,S*.54,S*(.24+i*.032)));
+  ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(S*.05,S*.92);ctx.lineTo(S*.95,S*.92);ctx.stroke();
+  ctx.font=`${S*.016}px DM Mono`;ctx.fillStyle='#888';ctx.fillText('OptoSim Pro · Herramienta clínica docente',S*.05,S*.97);
+}
+
+function drawColor(ctx,S){
+  ctx.fillStyle='#111';ctx.fillRect(0,0,S,S);
+  ctx.font=`bold ${S*.04}px DM Sans`;ctx.fillStyle='#e8f0ff';ctx.textAlign='center';ctx.fillText('Test de Visión Cromática',S/2,S*.07);
+  const plates=[{n:'12',fh:0,bh:120,cx:.25,cy:.3},{n:'8',fh:30,bh:200,cx:.75,cy:.3},{n:'29',fh:280,bh:60,cx:.25,cy:.7},{n:'5',fh:160,bh:10,cx:.75,cy:.7}];
+  plates.forEach(p=>{
+    const px=S*p.cx,py=S*p.cy,r=S*.18;
+    for(let i=0;i<220;i++){
+      const a=Math.random()*Math.PI*2,d=Math.random()*r*.9;
+      ctx.fillStyle=`hsl(${p.bh+(Math.random()-.5)*30},${50+Math.random()*30}%,${40+Math.random()*20}%)`;
+      ctx.beginPath();ctx.arc(px+Math.cos(a)*d,py+Math.sin(a)*d,S*.011+Math.random()*S*.011,0,Math.PI*2);ctx.fill();
+    }
+    ctx.save();ctx.font=`bold ${r*.88}px DM Sans`;ctx.textAlign='center';
+    ctx.fillStyle=`hsl(${p.fh},60%,55%)`;ctx.globalAlpha=.8;ctx.fillText(p.n,px,py+r*.3);ctx.restore();
+    ctx.save();ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.stroke();ctx.restore();
+  });
+  ctx.font=`${S*.024}px DM Mono`;ctx.fillStyle='#4a6a8a';ctx.textAlign='center';ctx.fillText('Placas de Ishihara simplificadas',S/2,S*.95);
+}
+
+/* ====================================================
+   PANEL 4 — PATOLOGÍAS
+   ==================================================== */
+let curPatho='none',sev=50,p2=50,p3=50,p4=50;
+
+const PATHO_META={
+  none:{lbl:'Sin patología',desc:'Campo visual completo y sin alteraciones.',p2:null,p3:null,p4:null,clin:''},
+  cataract:{lbl:'Catarata',desc:'Opacificación del cristalino. Reducción de transparencia, amarillamiento y difracción de luz.',p2:'Amarillamiento',p3:'Halos (px)',p4:'Reducción contraste',clin:'Prevalencia: 50% >70 años. Tratamiento: facoemulsificación + LIO. Primera causa de ceguera reversible.'},
+  retinal:{lbl:'Desprendimiento de Retina',desc:'Separación de retina sensorial del EPR. Zona de pérdida visual como "cortina" oscura.',p2:'Posición cortina (%)',p3:null,p4:null,clin:'Urgencia oftalmológica. Síntomas: miodesopsias + fotopsias + escotoma. Cirugía de urgencia.'},
+  diplopia:{lbl:'Diplopía',desc:'Visión doble por desalineación de ejes visuales. Control de separación horizontal y vertical.',p2:'Desplaz. horizontal',p3:'Desplaz. vertical',p4:null,clin:'Causas: parálisis PC III/IV/VI, miastenia gravis, oftalmopatía tiroidea. Oclusión como tratamiento temporal.'},
+  macular:{lbl:'Deg. Macular',desc:'Pérdida de fotorreceptores en área macular. Escotoma central con visión periférica conservada.',p2:'Tamaño escotoma',p3:null,p4:null,clin:'DMAE seca (80%) vs húmeda (20%). Anti-VEGF para forma húmeda. Cuadrícula de Amsler para seguimiento.'},
+  glaucoma:{lbl:'Glaucoma',desc:'Neuropatía óptica progresiva. Pérdida del campo visual periférico con visión en túnel.',p2:'Gradiente borde',p3:null,p4:null,clin:'Primera causa de ceguera irreversible. Target PIO individualizado. Perimetría computarizada para seguimiento.'},
+  keratoconus:{lbl:'Queratocono',desc:'Ectasia corneal progresiva. Astigmatismo irregular y miopía creciente con distorsión.',p2:'Astigmatismo irregular',p3:'Distorsión',p4:null,clin:'Prevalencia: 1:2000. Crosslinking corneal para detener progresión. LCR o queratoplastia en casos avanzados.'},
+  diabetic:{lbl:'Retinopatía Diabética',desc:'Microangiopatía retiniana. Microaneurismas, exudados, hemorragias y neovascularización.',p2:'Microaneurismas',p3:'Exudados',p4:'Hemorragias',clin:'Causa principal de ceguera en edad laboral. Control glucémico + panfotocoagulación + anti-VEGF intravítreo.'}
+};
+
+function setPatho(p){
+  curPatho=p;
+  document.querySelectorAll('[id^="pb-"]').forEach(b=>b.classList.remove('active'));
+  const idMap={none:'pb-none',cataract:'pb-cat',retinal:'pb-ret',diplopia:'pb-dip',macular:'pb-mac',glaucoma:'pb-gla',keratoconus:'pb-ker',diabetic:'pb-dia'};
+  if($(idMap[p]))$(idMap[p]).classList.add('active');
+  const m=PATHO_META[p]||PATHO_META.none;
+  $('pdesc').textContent=m.desc;
+  $('slbl-p2').textContent=m.p2||'Parámetro 2';$('p2-row').style.display=m.p2?'flex':'none';
+  $('slbl-p3').textContent=m.p3||'Parámetro 3';$('p3-row').style.display=m.p3?'flex':'none';
+  $('slbl-p4').textContent=m.p4||'Parámetro 4';$('p4-row').style.display=m.p4?'flex':'none';
+  $('pclin').innerHTML=m.clin?m.clin:'Seleccione una patología.';
+  $('pat-lbl').textContent=m.lbl.toUpperCase();
+  renderPatho();
+}
+function onSevChange(){sev=+$('sl-sev').value;$('val-sev').textContent=sev+'%';renderPatho();}
+function onP2Change(){p2=+$('sl-p2').value;$('val-p2').textContent=p2+'%';renderPatho();}
+function onP3Change(){p3=+$('sl-p3').value;$('val-p3').textContent=p3;renderPatho();}
+function onP4Change(){p4=+$('sl-p4').value;$('val-p4').textContent=p4+'%';renderPatho();}
+
+function resizePat(){
+  const cv=$('canvas-pat'),area=$('pat-area'),r=area.getBoundingClientRect();
+  const S=Math.min(r.width*.92,r.height*.92,640);
+  cv.width=Math.round(S);cv.height=Math.round(S);cv.style.width=S+'px';cv.style.height=S+'px';
+}
+
+function renderPatho(){
+  const cv=$('canvas-pat'),S=cv.width;if(!S)return;
+  const ctx=cv.getContext('2d'),imgType=$('sel-pimg').value,compare=$('ck-pc').checked;
+  ctx.clearRect(0,0,S,S);
+  const base=document.createElement('canvas');base.width=S;base.height=S;
+  drawTestImg(base.getContext('2d'),S,imgType);
+  if(compare){
+    const H=Math.floor(S/2);
+    ctx.save();ctx.beginPath();ctx.rect(0,0,H,S);ctx.clip();ctx.drawImage(base,0,0);
+    ctx.font=`${S*.024}px DM Mono`;ctx.fillStyle='rgba(255,255,255,0.4)';ctx.textAlign='center';ctx.fillText('NORMAL',H/2,S*.04);ctx.restore();
+    ctx.save();ctx.beginPath();ctx.rect(H,0,H,S);ctx.clip();ctx.translate(H,0);
+    const base2=document.createElement('canvas');base2.width=S;base2.height=S;
+    drawTestImg(base2.getContext('2d'),S,imgType);
+    applyPathoToCtx(ctx,base2,S,S);
+    ctx.font=`${S*.024}px DM Mono`;ctx.fillStyle='rgba(255,100,100,0.6)';ctx.textAlign='center';ctx.fillText('PATOLÓGICO',H/2,S*.04);ctx.restore();
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(H,0);ctx.lineTo(H,S);ctx.stroke();
+  }else{
+    applyPathoToCtx(ctx,base,S,S);
+  }
+}
+
+function applyPathoToCtx(ctx,base,W,H){
+  switch(curPatho){
+    case 'none':ctx.drawImage(base,0,0);break;
+    case 'cataract':patho_Cataract(ctx,base,W,H);break;
+    case 'retinal':patho_Retinal(ctx,base,W,H);break;
+    case 'diplopia':patho_Diplopia(ctx,base,W,H);break;
+    case 'macular':patho_Macular(ctx,base,W,H);break;
+    case 'glaucoma':patho_Glaucoma(ctx,base,W,H);break;
+    case 'keratoconus':patho_Keratoconus(ctx,base,W,H);break;
+    case 'diabetic':patho_Diabetic(ctx,base,W,H);break;
+    default:ctx.drawImage(base,0,0);
+  }
+}
+
+function patho_Cataract(ctx,base,W,H){
+  const blur=sev*.14,yellow=(p2/100)*.55,halo=(p3/100)*8,contr=1-(p4/100)*.55,bright=.65+.35*(1-sev/100);
+  ctx.save();ctx.filter=`blur(${blur}px) brightness(${bright}) contrast(${contr})`;ctx.drawImage(base,0,0);ctx.restore();
+  if(halo>1){ctx.save();ctx.globalAlpha=.28*(p3/100);ctx.filter=`blur(${halo}px) brightness(2)`;ctx.drawImage(base,0,0);ctx.restore();}
+  ctx.save();ctx.globalAlpha=yellow;ctx.fillStyle='rgba(200,145,20,1)';ctx.fillRect(0,0,W,H);ctx.restore();
+  ctx.save();ctx.globalAlpha=(sev/100)*.26;ctx.fillStyle='rgba(220,210,180,1)';ctx.fillRect(0,0,W,H);ctx.restore();
+}
+
+function patho_Retinal(ctx,base,W,H){
+  ctx.drawImage(base,0,0);
+  const curtY=(p2/100)*H*.8+H*.1,op=.35+(sev/100)*.6;
+  const g=ctx.createLinearGradient(0,curtY-H*.12,0,H);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.25,`rgba(0,0,0,${op})`);g.addColorStop(1,`rgba(0,0,0,${Math.min(op+.2,1)})`);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.globalAlpha=op;ctx.fillStyle='#000';ctx.beginPath();ctx.moveTo(0,curtY);
+  for(let i=0;i<=40;i++){const x=(i/40)*W,n=(Math.sin(i*.4)*.6+Math.sin(i*.17)*.4+Math.cos(i*.9)*.2)*28*(sev/100);ctx.lineTo(x,curtY+n+H*.015);}
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.restore();
+  if(sev>30){ctx.save();for(let i=0;i<18;i++){ctx.fillStyle=`rgba(255,255,200,${Math.random()*.4})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*curtY*1.1,1+Math.random()*2,0,Math.PI*2);ctx.fill();}ctx.restore();}
+}
+
+function patho_Diplopia(ctx,base,W,H){
+  const dh=(p2/100)*W*.15,dv=(p3/100)*H*.12,a2=.25+(1-sev/100)*.35;
+  ctx.save();ctx.globalAlpha=.72;ctx.drawImage(base,0,0);ctx.restore();
+  ctx.save();ctx.globalAlpha=a2;ctx.drawImage(base,dh,dv);ctx.restore();
+}
+
+function patho_Macular(ctx,base,W,H){
+  ctx.drawImage(base,0,0);
+  const cx=W/2,cy=H/2,radius=W*.04+(p2/100)*W*.2,density=.25+(sev/100)*.7;
+  const g=ctx.createRadialGradient(cx,cy,radius*.2,cx,cy,radius);
+  g.addColorStop(0,`rgba(15,8,3,${density})`);g.addColorStop(.5,`rgba(40,22,8,${density*.7})`);g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+  if(sev>20){ctx.save();ctx.strokeStyle=`rgba(80,50,10,${density*.45})`;ctx.lineWidth=3;ctx.beginPath();
+    for(let a=0;a<Math.PI*2;a+=.05)ctx.lineTo(cx+Math.cos(a)*(radius+Math.sin(a*8)*4*(sev/100)),cy+Math.sin(a)*(radius+Math.sin(a*8)*4*(sev/100)));
+    ctx.closePath();ctx.stroke();ctx.restore();}
+}
+
+function patho_Glaucoma(ctx,base,W,H){
+  const vR=W*(.46-(sev/100)*.38),soft=.06+(p2/100)*.22,cx=W/2,cy=H/2;
+  ctx.drawImage(base,0,0);
+  const g=ctx.createRadialGradient(cx,cy,Math.max(0,vR*(1-soft)),cx,cy,vR+W*.25);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.3,'rgba(0,0,0,0.6)');g.addColorStop(.7,'rgba(0,0,0,0.9)');g.addColorStop(1,'rgba(0,0,0,0.99)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.fillStyle='#000';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(cx,cy,vR+W*.28,0,Math.PI*2,true);ctx.fill('evenodd');ctx.restore();
+  if(sev<60){ctx.save();ctx.strokeStyle=`rgba(0,0,0,${.4+sev/200})`;ctx.lineWidth=W*.03;ctx.beginPath();ctx.arc(cx+W*.04,cy,vR*.5,Math.PI*1.1,Math.PI*1.9);ctx.stroke();ctx.restore();}
+}
+
+function patho_Keratoconus(ctx,base,W,H){
+  const irr=(p2/100)*12,dist=(p3/100)*18,blur=(sev/100)*10;
+  ctx.save();ctx.filter=`blur(${blur}px)`;ctx.drawImage(base,0,0);ctx.restore();
+  [Math.PI*.1,-Math.PI*.15,Math.PI*.25].forEach((a,i)=>{
+    ctx.save();ctx.globalAlpha=.14+(irr/12)*.12;ctx.filter=`blur(${blur*.5}px)`;
+    ctx.drawImage(base,Math.cos(a)*dist*(i+1)*.5,Math.sin(a)*dist*(i+1)*.5);ctx.restore();
+  });
+  const g=ctx.createRadialGradient(W/2,H*.6,W*.1,W/2,H*.5,W*.55);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${sev/200})`);
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+
+function patho_Diabetic(ctx,base,W,H){
+  ctx.drawImage(base,0,0);
+  const nm=Math.round((sev/100)*40),ne=Math.round((p3/100)*25),nh=Math.round((p4/100)*20);
+  for(let i=0;i<nm;i++){ctx.fillStyle=`rgba(160,30,20,${.5+Math.random()*.4})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*H,1+Math.random()*2,0,Math.PI*2);ctx.fill();}
+  for(let i=0;i<ne;i++){ctx.fillStyle=`rgba(255,240,180,${.5+Math.random()*.4})`;ctx.beginPath();ctx.ellipse(Math.random()*W,Math.random()*H,3+Math.random()*8,2+Math.random()*5,Math.random()*Math.PI,0,Math.PI*2);ctx.fill();}
+  for(let i=0;i<nh;i++){const x=Math.random()*W,y=Math.random()*H;ctx.fillStyle=`rgba(120,10,10,${.5+Math.random()*.3})`;ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-4,y+8,x+6,y+14,x,y+18);ctx.bezierCurveTo(x-6,y+14,x+4,y+8,x,y);ctx.fill();}
+  if(sev>60){ctx.save();ctx.strokeStyle='rgba(200,20,20,0.35)';ctx.lineWidth=.7;for(let v=0;v<8;v++){let vx=Math.random()*W,vy=Math.random()*H;ctx.beginPath();ctx.moveTo(vx,vy);for(let s=0;s<12;s++){vx+=(Math.random()-.5)*20;vy+=(Math.random()-.5)*20;ctx.lineTo(vx,vy);}ctx.stroke();}ctx.restore();}
+  if(sev>70){const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;tmp.getContext('2d').drawImage(ctx.canvas,0,0);ctx.save();ctx.clearRect(0,0,W,H);ctx.filter=`blur(${(sev-70)*.1}px)`;ctx.drawImage(tmp,0,0);ctx.restore();}
+}
+
+/* ====================================================
+   INIT & RESIZE
+   ==================================================== */
+function initAll(){
+  resizeSim();drawSim();
+  resizeInv();calcInverse();
+  renderVisual();
+  resizePat();setPatho('none');
+}
+const ro=new ResizeObserver(()=>{
+  const a=document.querySelector('.panel.active');if(!a)return;
+  if(a.id==='panel-sim'){resizeSim();drawSim();}
+  if(a.id==='panel-inv'){resizeInv();calcInverse();}
+  if(a.id==='panel-vis'){renderVisual();}
+  if(a.id==='panel-pat'){resizePat();renderPatho();}
+});
+ro.observe(document.body);
+window.addEventListener('DOMContentLoaded',initAll);
+window.addEventListener('load',initAll);
+
+
+/* ====================================================
+   EXTRAS: ANIMACIÓN, GRÁFICA AV, INFORME, CAMPO VISUAL, TEMA
+   ==================================================== */
+
+// ── ANIMATION ──────────────────────────────────────────────────────────────
+let animRunning = false, animPhase = 0, animRAF = null;
+
+function toggleAnim() {
+  animRunning = !animRunning;
+  const btn = $('btn-anim'), dot = $('anim-dot'), sta = $('anim-status');
+  if (animRunning) {
+    btn.textContent = '⏹ Detener';
+    dot.classList.add('running');
+    sta.textContent = 'Animando';
+    runAnim();
+  } else {
+    btn.textContent = '▶ Animar rayos';
+    dot.classList.remove('running');
+    sta.textContent = 'Parado';
+    if (animRAF) { cancelAnimationFrame(animRAF); animRAF = null; }
+    drawSim();
+  }
+}
+
+function runAnim() {
+  if (!animRunning) return;
+  animPhase = (animPhase + 0.04) % (Math.PI * 2);
+  drawSimAnimated(animPhase);
+  animRAF = requestAnimationFrame(runAnim);
+}
+
+function drawSimAnimated(phase) {
+  const cv = $('canvas-sim');
+  if (!cv.width || !cv.height) return;
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, dpr = devicePixelRatio;
+  ctx.clearRect(0, 0, W, H);
+
+  const lensOn = $('ck-lens').checked;
+  if ($('ck-compare').checked) {
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W/2, H); ctx.clip();
+    drawEyeAnim(ctx, 0, 0, W/2, H, false, dpr, 'Sin corrección', phase); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(W/2, 0, W/2, H); ctx.clip();
+    drawEyeAnim(ctx, W/2, 0, W/2, H, true, dpr, 'Con corrección', phase); ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4*dpr, 4*dpr]);
+    ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke(); ctx.setLineDash([]);
+  } else {
+    drawEyeAnim(ctx, 0, 0, W, H/2, false, dpr, 'Sin corrección', phase);
+    drawEyeAnim(ctx, 0, H/2, W, H/2, lensOn, dpr, lensOn ? 'Con corrección' : 'Sin lente', phase);
+  }
+  updateInfoBar();
+}
+
+function drawEyeAnim(ctx, ox, oy, W, H, withLens, dpr, title, phase) {
+  // Reuse static eye drawing but overlay animated ray front
+  drawEye(ctx, ox, oy, W, H, withLens, dpr, title);
+
+  ctx.save(); ctx.translate(ox, oy);
+  const lensOn = withLens && $('ck-lens').checked;
+  const eL = W * .30, eR = W * .88, eW = eR - eL, cy = H / 2;
+  const eH = Math.min(H * .54, 110 * dpr);
+  const cX = eL, lX = eL + eW * .33, rX = eR, extX = eL - 44 * dpr;
+
+  const eff = lensOn ? vertCorr(lensPow, vertexMm) : 0;
+  const combErr = refract + eff;
+  const scale = (rX - lX) * .1;
+  const focusPx = rX - combErr * scale;
+  const focErr = Math.abs(focusPx - rX);
+  const rayCol = focErr < 7 * dpr ? '#00d4a8' : lensOn ? '#3d8cff' : '#ff6b4a';
+
+  // Animated wavefront: a vertical bright line travelling left→right
+  const startX = lensOn ? extX - 68 * dpr : cX - 58 * dpr;
+  const endX = Math.min(rX, lensOn ? rX : rX);
+  const travelLen = endX - startX;
+  const wfX = startX + ((phase / (Math.PI * 2)) * travelLen * 1.5) % travelLen;
+
+  if (wfX > startX && wfX < rX + 10 * dpr) {
+    const nRaysLocal = nRays;
+    const offsets = [];
+    for (let i = 0; i < nRaysLocal; i++) {
+      const f = nRaysLocal === 1 ? 0 : (i / (nRaysLocal - 1) - .5) * 2;
+      offsets.push(f * eH * .34);
+    }
+
+    // Wavefront glow line
+    ctx.save();
+    // Compute Y at wfX for the central ray slope
+    let wfYTop, wfYBot;
+    // top ray (off = -eH*0.34)
+    const offTop = -eH * .34, offBot = eH * .34;
+    const getSlopeY = (off, x) => {
+      const sy = cy + off;
+      if (lensOn) {
+        const dxe = focusPx - extX, sl = dxe !== 0 ? (cy - sy) / dxe : 0;
+        const yc = sy + sl * (cX - extX);
+        if (x <= cX) return sy + (sl * (x - extX));
+        const dxi = focusPx - cX, sli = dxi !== 0 ? (cy - yc) / dxi : 0;
+        return yc + sli * (x - cX);
+      } else {
+        const dx = focusPx - lX, sl2 = dx !== 0 ? (cy - sy) / dx : 0;
+        if (x <= lX) return sy;
+        return sy + sl2 * (x - lX);
+      }
+    };
+    wfYTop = getSlopeY(offTop, wfX);
+    wfYBot = getSlopeY(offBot, wfX);
+
+    const wg = ctx.createLinearGradient(0, wfYTop, 0, wfYBot);
+    wg.addColorStop(0, 'rgba(255,255,255,0)');
+    wg.addColorStop(.5, rayCol + 'ff');
+    wg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = wg;
+    ctx.lineWidth = 2.5 * dpr;
+    ctx.shadowColor = rayCol; ctx.shadowBlur = 12;
+    ctx.globalAlpha = .85;
+    ctx.beginPath();
+    ctx.moveTo(wfX, wfYTop);
+    ctx.lineTo(wfX, wfYBot);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// ── AV CHART ───────────────────────────────────────────────────────────────
+function showAVChart() {
+  $('modal-av').classList.add('open');
+  setTimeout(drawAVChart, 50);
+}
+
+function drawAVChart() {
+  const cv = $('canvas-av-chart');
+  if (!cv) return;
+  const area = cv.parentElement;
+  const W = area.clientWidth, H = 320;
+  cv.width = W; cv.height = H;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--surface2') || '#181d2a';
+  ctx.fillRect(0, 0, W, H);
+
+  const pad = { l: 64, r: 24, t: 20, b: 48 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+
+  // Axis range: -12 to +12 D, logMAR 0 to 1.7
+  const xMin = -12, xMax = 12, yMin = 0, yMax = 1.7;
+  const xScale = cW / (xMax - xMin);
+  const yScale = cH / (yMax - yMin);
+  const toX = d => pad.l + (d - xMin) * xScale;
+  const toY = lm => pad.t + cH - (lm - yMin) * yScale;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  for (let d = xMin; d <= xMax; d += 2) {
+    ctx.beginPath(); ctx.moveTo(toX(d), pad.t); ctx.lineTo(toX(d), pad.t + cH); ctx.stroke();
+  }
+  const logmarTicks = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.9, 1.3, 1.6];
+  logmarTicks.forEach(lm => {
+    ctx.beginPath(); ctx.moveTo(pad.l, toY(lm)); ctx.lineTo(pad.l + cW, toY(lm)); ctx.stroke();
+  });
+
+  // Colored zone bands
+  const bands = [
+    { y1: 0, y2: .15, col: 'rgba(0,212,168,0.08)' },    // normal
+    { y1: .15, y2: .5,  col: 'rgba(245,158,11,0.07)' },  // reduced
+    { y1: .5, y2: 1.7,  col: 'rgba(255,107,74,0.07)' },  // poor
+  ];
+  bands.forEach(b => {
+    ctx.fillStyle = b.col;
+    ctx.fillRect(pad.l, toY(b.y2), cW, toY(b.y1) - toY(b.y2));
+  });
+
+  // AV curve (symmetrical — same blur for myopia and hyperopia)
+  const avPts = [
+    [-12,1.6],[-10,1.5],[-8,1.4],[-6,1.3],[-5,1.2],[-4,1.1],[-3,0.9],[-2,0.7],
+    [-1.5,0.5],[-1,0.4],[-0.75,0.3],[-0.5,0.2],[-0.25,0.1],[0,0],
+    [0.25,0.1],[0.5,0.2],[0.75,0.3],[1,0.4],[1.5,0.5],[2,0.7],[3,0.9],
+    [4,1.1],[5,1.2],[6,1.3],[8,1.4],[10,1.5],[12,1.6]
+  ];
+
+  // Gradient under curve
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+  grad.addColorStop(0, 'rgba(255,107,74,0.3)');
+  grad.addColorStop(.4, 'rgba(245,158,11,0.2)');
+  grad.addColorStop(.9, 'rgba(0,212,168,0.1)');
+  grad.addColorStop(1, 'rgba(0,212,168,0)');
+  ctx.beginPath();
+  avPts.forEach(([d, lm], i) => i === 0 ? ctx.moveTo(toX(d), toY(lm)) : ctx.lineTo(toX(d), toY(lm)));
+  ctx.lineTo(toX(xMax), pad.t + cH);
+  ctx.lineTo(toX(xMin), pad.t + cH);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+  // Curve line
+  ctx.beginPath();
+  avPts.forEach(([d, lm], i) => i === 0 ? ctx.moveTo(toX(d), toY(lm)) : ctx.lineTo(toX(d), toY(lm)));
+  ctx.strokeStyle = '#3d8cff'; ctx.lineWidth = 2.5; ctx.stroke();
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + cH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t + cH); ctx.lineTo(pad.l + cW, pad.t + cH); ctx.stroke();
+
+  // X axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '10px DM Mono, monospace'; ctx.textAlign = 'center';
+  for (let d = xMin; d <= xMax; d += 2) {
+    ctx.fillText((d >= 0 ? '+' : '') + d, toX(d), pad.t + cH + 16);
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('Error Refractivo (D)', pad.l + cW / 2, H - 4);
+
+  // Y axis labels (logMAR + Snellen)
+  const snellenMap = [[0,'20/20'],[.1,'20/25'],[.2,'20/32'],[.3,'20/40'],[.4,'20/50'],[.5,'20/63'],[.7,'20/100'],[.9,'20/160'],[1.3,'20/400'],[1.6,'CF']];
+  ctx.textAlign = 'right';
+  snellenMap.forEach(([lm, lbl]) => {
+    const y = toY(lm);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '9px DM Mono, monospace';
+    ctx.fillText(lm.toFixed(1), pad.l - 28, y + 3);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '9px DM Mono, monospace';
+    ctx.fillText(lbl, pad.l - 4, y + 3);
+  });
+
+  // Y axis title
+  ctx.save(); ctx.translate(12, pad.t + cH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '10px DM Mono, monospace';
+  ctx.fillText('logMAR', 0, 0); ctx.restore();
+
+  // Current state dot
+  const curErr = refract + ($('ck-lens').checked ? vertCorr(lensPow, vertexMm) : 0);
+  const curLM = acuity(curErr).l;
+  const cx2 = toX(clamp(curErr, xMin, xMax)), cy2 = toY(clamp(curLM, yMin, yMax));
+  ctx.save();
+  ctx.shadowColor = '#3d8cff'; ctx.shadowBlur = 16;
+  ctx.fillStyle = '#3d8cff';
+  ctx.beginPath(); ctx.arc(cx2, cy2, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx2, cy2, 7, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+
+  // Current state info
+  $('av-cur-err').textContent = fmtD(curErr);
+  $('av-cur-frac').textContent = acuity(curErr).f;
+  $('av-cur-log').textContent = acuity(curErr).l.toFixed(2);
+
+  // Hover tooltip
+  cv.onmousemove = function(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    if (mx >= pad.l && mx <= pad.l + cW && my >= pad.t && my <= pad.t + cH) {
+      const hoverD = (mx - pad.l) / xScale + xMin;
+      const hoverLM = acuity(hoverD).l;
+      const tt = $('av-tooltip');
+      tt.style.display = 'block';
+      tt.style.left = (mx + 12) + 'px';
+      tt.style.top = (my - 10) + 'px';
+      tt.innerHTML = `${(hoverD >= 0 ? '+' : '')}${hoverD.toFixed(2)} D → ${acuity(hoverD).f} (${hoverLM.toFixed(2)} logMAR)`;
+    }
+  };
+  cv.onmouseleave = () => { $('av-tooltip').style.display = 'none'; };
+}
+
+// ── INFORME ─────────────────────────────────────────────────────────────────
+function showReport() {
+  buildReport();
+  $('modal-report').classList.add('open');
+}
+
+function buildReport() {
+  const lOn = $('ck-lens').checked;
+  const eff = lOn ? vertCorr(lensPow, vertexMm) : 0;
+  const res = refract + eff;
+  const aRaw = acuity(refract), aCor = acuity(res);
+  const now = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const pod = +$('inv-od').value || 0, poi = +$('inv-oi').value || 0;
+  const coD = +$('inv-od-cyl').value || 0, coI = +$('inv-oi-cyl').value || 0;
+  const dod = -pod, doi = -poi;
+  const prOD = Math.abs(dod) > .05 ? (1 / Math.abs(dod)).toFixed(2) + ' m' : '∞';
+  const prOI = Math.abs(doi) > .05 ? (1 / Math.abs(doi)).toFixed(2) + ' m' : '∞';
+  const aniso = Math.abs(pod - poi);
+  const add = +$('inv-add').value || 0;
+
+  const html = `
+  <div class="report-section">
+    <h4>Identificación del informe</h4>
+    <div class="report-grid">
+      <div class="report-item"><div class="rl">Fecha</div><div class="rv">${now}</div></div>
+      <div class="report-item"><div class="rl">Herramienta</div><div class="rv">OptoSim Pro v3.1</div></div>
+      <div class="report-item"><div class="rl">Tipo de análisis</div><div class="rv">Simulación óptica</div></div>
+      <div class="report-item"><div class="rl">Fin didáctico</div><div class="rv">Sí — No diagnóstico</div></div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <h4>Panel 1 — Simulador óptico</h4>
+    <div class="report-grid">
+      <div class="report-item"><div class="rl">Tipo de ojo</div><div class="rv">${eyeType === 'normal' ? 'Emétrope' : eyeType === 'myopia' ? 'Miopía' : 'Hipermetropía'}</div></div>
+      <div class="report-item"><div class="rl">Error refractivo</div><div class="rv">${fmtD(refract)}</div></div>
+      <div class="report-item"><div class="rl">Lente correctora</div><div class="rv">${lOn ? fmtD(lensPow) : 'No activa'}</div></div>
+      <div class="report-item"><div class="rl">Lente efectiva</div><div class="rv">${lOn ? fmtD(eff) + ' (vértice ' + vertexMm + ' mm)' : '—'}</div></div>
+      <div class="report-item"><div class="rl">Error residual</div><div class="rv">${fmtD(res)}</div></div>
+      <div class="report-item"><div class="rl">Estado óptico</div><div class="rv">${Math.abs(res) < .25 ? 'Corregido ✓' : res < 0 ? 'Hipocorrección' : 'Sobrecorrección'}</div></div>
+      <div class="report-item"><div class="rl">AV sin corrección</div><div class="rv">${aRaw.f} (logMAR ${aRaw.l.toFixed(2)})</div></div>
+      <div class="report-item"><div class="rl">AV con corrección</div><div class="rv">${aCor.f} (logMAR ${aCor.l.toFixed(2)})</div></div>
+      <div class="report-item"><div class="rl">Acomodación activa</div><div class="rv">${$('ck-accom').checked ? accomAmp.toFixed(1) + ' D amp.' : 'No'}</div></div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <h4>Panel 2 — Modo inverso (refracción calculada)</h4>
+    <div class="report-grid">
+      <div class="report-item"><div class="rl">Corrección OD (esfera)</div><div class="rv">${fmtD(pod)}</div></div>
+      <div class="report-item"><div class="rl">Corrección OD (cilindro)</div><div class="rv">${fmtD(coD)}</div></div>
+      <div class="report-item"><div class="rl">Defecto OD calculado</div><div class="rv">${dlbl(dod)}</div></div>
+      <div class="report-item"><div class="rl">Punto remoto OD</div><div class="rv">${prOD}</div></div>
+      <div class="report-item"><div class="rl">Corrección OI (esfera)</div><div class="rv">${fmtD(poi)}</div></div>
+      <div class="report-item"><div class="rl">Corrección OI (cilindro)</div><div class="rv">${fmtD(coI)}</div></div>
+      <div class="report-item"><div class="rl">Defecto OI calculado</div><div class="rv">${dlbl(doi)}</div></div>
+      <div class="report-item"><div class="rl">Punto remoto OI</div><div class="rv">${prOI}</div></div>
+      <div class="report-item"><div class="rl">Anisometropía</div><div class="rv">${aniso.toFixed(2)} D${aniso > 2.5 ? ' ⚠ significativa' : ''}</div></div>
+      <div class="report-item"><div class="rl">Adición presbicia</div><div class="rv">${add > 0 ? fmtD(add) : '—'}</div></div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <h4>Panel 4 — Patología simulada</h4>
+    <div class="report-grid">
+      <div class="report-item"><div class="rl">Patología activa</div><div class="rv">${(PATHO_META[curPatho]||PATHO_META.none).lbl}</div></div>
+      <div class="report-item"><div class="rl">Severidad</div><div class="rv">${sev}%</div></div>
+      <div class="report-item"><div class="rl">Descripción</div><div class="rv" style="font-size:9.5px">${(PATHO_META[curPatho]||PATHO_META.none).desc}</div></div>
+    </div>
+  </div>
+
+  <div style="font-size:9px;color:var(--text-dim);line-height:1.6;margin-top:8px;padding:8px;background:var(--surface3);border-radius:5px">
+    ⚠ Este informe ha sido generado por OptoSim Pro con fines exclusivamente docentes y de simulación. No constituye un diagnóstico clínico ni reemplaza la evaluación por un profesional sanitario cualificado (oftalmólogo u optometrista).
+  </div>`;
+
+  $('report-content').innerHTML = html;
+}
+
+function getReportText() {
+  const lOn = $('ck-lens').checked;
+  const eff = lOn ? vertCorr(lensPow, vertexMm) : 0;
+  const res = refract + eff;
+  const aRaw = acuity(refract), aCor = acuity(res);
+  const now = new Date().toLocaleDateString('es-ES');
+  const pod = +$('inv-od').value || 0, poi = +$('inv-oi').value || 0;
+  const dod = -pod, doi = -poi;
+  const prOD = Math.abs(dod) > .05 ? (1 / Math.abs(dod)).toFixed(2) + ' m' : 'infinito';
+  const prOI = Math.abs(doi) > .05 ? (1 / Math.abs(doi)).toFixed(2) + ' m' : 'infinito';
+  const aniso = Math.abs(pod - poi);
+  return `INFORME OPTOSIM PRO v3.1
+Fecha: ${now}
+========================================
+
+SIMULADOR ÓPTICO
+  Tipo de ojo:       ${eyeType}
+  Error refractivo:  ${fmtD(refract)}
+  Lente correctora:  ${lOn ? fmtD(lensPow) : 'No activa'}
+  Lente efectiva:    ${lOn ? fmtD(eff) + ' (vértice ' + vertexMm + ' mm)' : '—'}
+  Error residual:    ${fmtD(res)}
+  AV sin corrección: ${aRaw.f} (logMAR ${aRaw.l.toFixed(2)})
+  AV con corrección: ${aCor.f} (logMAR ${aCor.l.toFixed(2)})
+
+MODO INVERSO (refracción calculada)
+  Corrección OD:     ${fmtD(pod)} esf / ${fmtD(+$('inv-od-cyl').value||0)} cil
+  Defecto OD:        ${dlbl(dod)} — Pto. remoto: ${prOD}
+  Corrección OI:     ${fmtD(poi)} esf / ${fmtD(+$('inv-oi-cyl').value||0)} cil
+  Defecto OI:        ${dlbl(doi)} — Pto. remoto: ${prOI}
+  Anisometropía:     ${aniso.toFixed(2)} D${aniso > 2.5 ? ' (SIGNIFICATIVA)' : ''}
+
+PATOLOGÍA SIMULADA
+  Patología:         ${(PATHO_META[curPatho]||PATHO_META.none).lbl}
+  Severidad:         ${sev}%
+
+AVISO: Documento generado con fines docentes. No constituye diagnóstico clínico.`;
+}
+
+function downloadReport() {
+  const txt = getReportText();
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'informe-optosim-' + new Date().toISOString().slice(0, 10) + '.txt';
+  a.click();
+}
+
+function copyReport() {
+  navigator.clipboard.writeText(getReportText()).then(() => {
+    const btn = document.querySelector('#modal-report .btn:last-child');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  });
+}
+
+// ── CAMPO VISUAL ────────────────────────────────────────────────────────────
+function showFieldMap() {
+  $('modal-field').classList.add('open');
+  setTimeout(drawFieldMaps, 50);
+}
+
+function drawFieldMaps() {
+  drawOneFieldMap('canvas-field-od', 'OD');
+  drawOneFieldMap('canvas-field-oi', 'OI');
+
+  const meta = PATHO_META[curPatho] || PATHO_META.none;
+  const legendData = getFieldLegend(curPatho);
+  $('field-legend').innerHTML = legendData.map(l => `<div><span style="color:${l.col}">■</span> ${l.lbl}</div>`).join('');
+  $('field-info').textContent = meta.clin || 'Sin información clínica adicional.';
+}
+
+function getFieldLegend(p) {
+  const map = {
+    none:        [{ col: '#00d4a8', lbl: 'Campo completo' }],
+    cataract:    [{ col: '#f59e0b', lbl: 'Reducción difusa' }, { col: '#7dd3fc', lbl: 'Halos periféricos' }],
+    retinal:     [{ col: '#ff6b4a', lbl: 'Escotoma periférico' }, { col: '#000', lbl: 'Zona desprendida' }],
+    diplopia:    [{ col: '#a78bfa', lbl: 'Imagen primaria' }, { col: '#a78bfa88', lbl: 'Imagen fantasma' }],
+    macular:     [{ col: '#ff6b4a', lbl: 'Escotoma central' }, { col: '#00d4a8', lbl: 'Visión periférica OK' }],
+    glaucoma:    [{ col: '#00d4a8', lbl: 'Campo central residual' }, { col: '#1e2535', lbl: 'Campo periférico perdido' }],
+    keratoconus: [{ col: '#f59e0b', lbl: 'Distorsión central' }, { col: '#00d4a8', lbl: 'Periferia conservada' }],
+    diabetic:    [{ col: '#f87171', lbl: 'Microlesiones dispersas' }, { col: '#f59e0b', lbl: 'Zona macular' }],
+  };
+  return map[p] || map.none;
+}
+
+function drawOneFieldMap(canvasId, eye) {
+  const cv = $(canvasId);
+  if (!cv) return;
+  const ctx = cv.getContext('2d'), S = 240, R = S / 2 - 8;
+  ctx.clearRect(0, 0, S, S);
+  ctx.fillStyle = '#0a0d12'; ctx.fillRect(0, 0, S, S);
+
+  const cx = S / 2, cy = S / 2;
+
+  function drawField(pattern) {
+    // pattern: array of {angle, radius, col, alpha}
+    // Base: full green field
+    const baseGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    baseGrad.addColorStop(0, 'rgba(0,212,168,0.9)');
+    baseGrad.addColorStop(0.7, 'rgba(0,212,168,0.6)');
+    baseGrad.addColorStop(1, 'rgba(0,212,168,0.2)');
+    ctx.fillStyle = baseGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+
+    // Degree rings
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75, 1].forEach(f => {
+      ctx.beginPath(); ctx.arc(cx, cy, R * f, 0, Math.PI * 2); ctx.stroke();
+    });
+    // Meridians
+    [0, 45, 90, 135].forEach(deg => {
+      const r2 = deg * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(r2) * R, cy + Math.sin(r2) * R);
+      ctx.lineTo(cx - Math.cos(r2) * R, cy - Math.sin(r2) * R);
+      ctx.stroke();
+    });
+
+    // Apply pattern overlays
+    pattern.forEach(p => {
+      ctx.save();
+      if (p.type === 'arc') {
+        ctx.fillStyle = p.col;
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, R * p.r2, p.a1, p.a2);
+        if (p.r1 > 0) ctx.arc(cx, cy, R * p.r1, p.a2, p.a1, true);
+        ctx.closePath(); ctx.fill();
+      } else if (p.type === 'circle') {
+        ctx.fillStyle = p.col;
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath(); ctx.arc(cx + p.ox * R, cy + p.oy * R, R * p.r, 0, Math.PI * 2); ctx.fill();
+      } else if (p.type === 'dots') {
+        for (let i = 0; i < p.n; i++) {
+          const a = Math.random() * Math.PI * 2, d = Math.random() * R * p.spread;
+          ctx.fillStyle = p.col; ctx.globalAlpha = p.alpha * (.5 + Math.random() * .5);
+          ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, p.dr, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.restore();
+    });
+  }
+
+  const patterns = {
+    none: [],
+    cataract: [
+      { type: 'arc', col: 'rgba(200,145,20,0.3)', alpha: (sev/100)*.6, r1: 0, r2: 1, a1: 0, a2: Math.PI*2 }
+    ],
+    retinal: [
+      { type: 'arc', col: '#000', alpha: .75 + (sev/100)*.2, r1: (1 - p2/100)*.8, r2: 1, a1: Math.PI * (eye==='OD'?1.1:.9), a2: Math.PI * (eye==='OD'?2.1:1.9) }
+    ],
+    diplopia: [],
+    macular: [
+      { type: 'circle', col: 'rgba(15,8,3,1)', alpha: .3 + (sev/100)*.7, ox: 0, oy: 0, r: .08 + (p2/100)*.25 }
+    ],
+    glaucoma: [
+      { type: 'arc', col: '#050810', alpha: .85 + (sev/100)*.12, r1: .46 - (sev/100)*.38, r2: 1.1, a1: 0, a2: Math.PI*2 }
+    ],
+    keratoconus: [
+      { type: 'circle', col: 'rgba(245,158,11,0.4)', alpha: .5 + (sev/100)*.4, ox: .1, oy: .1, r: .22 + (sev/100)*.1 }
+    ],
+    diabetic: [
+      { type: 'dots', col: '#f87171', alpha: .6, n: Math.round((sev/100)*30), spread: 1, dr: 2 },
+      { type: 'dots', col: '#f59e0b', alpha: .5, n: Math.round((p3/100)*15), spread: .4, dr: 3 }
+    ]
+  };
+
+  drawField(patterns[curPatho] || patterns.none);
+
+  // Fixation cross
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx - 5, cy); ctx.lineTo(cx + 5, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, cy - 5); ctx.lineTo(cx, cy + 5); ctx.stroke();
+
+  // Blind spot (physiological) — nasal side
+  const bsX = eye === 'OD' ? cx - R * .38 : cx + R * .38;
+  ctx.fillStyle = '#0a0d12'; ctx.globalAlpha = .9;
+  ctx.beginPath(); ctx.ellipse(bsX, cy + R * .08, R * .06, R * .09, 0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Degree labels
+  ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = '9px DM Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText('90°', cx, cy - R - 4);
+  ctx.fillText('270°', cx, cy + R + 12);
+  ctx.textAlign = 'left'; ctx.fillText('0°', cx + R + 4, cy + 3);
+  ctx.textAlign = 'right'; ctx.fillText('180°', cx - R - 4, cy + 3);
+
+  // Label
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = 'bold 10px DM Mono, monospace'; ctx.textAlign = 'center';
+  ctx.fillText(eye, cx, S - 4);
+}
+
+// ── THEME TOGGLE ────────────────────────────────────────────────────────────
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  $('btn-theme').textContent = isDark ? '☀ Modo claro' : '🌙 Modo oscuro';
+  drawSim();
+}
+
+// ── MODAL HELPERS ───────────────────────────────────────────────────────────
+function closeModal(id) { $(id).classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); });
+document.querySelectorAll('.modal-overlay').forEach(mo => mo.addEventListener('click', e => { if (e.target === mo) mo.classList.remove('open'); }));
+
+// Helper exposed (needed by report)
+function dlbl(d) { if (Math.abs(d) < .12) return 'Emetropía'; return d < 0 ? `Miopía ${Math.abs(d).toFixed(2)} D` : `Hipermetropía ${d.toFixed(2)} D`; }
+
+</script>
+</body>
+</html>
